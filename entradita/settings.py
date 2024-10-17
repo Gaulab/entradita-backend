@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+from corsheaders.defaults import default_headers
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,7 +22,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-9%%!^#n#=%ff^^)bpm5#2ne@=u5u7c@*ook++0cnftjr95$gt%'
+SECRET_KEY = '46c537df2be36f751ddb031d70f5e1c187d913938710c1f309bce0c392b0b3f3'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -133,6 +134,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
 ]
+
 
 # REST Framework configuration
 REST_FRAMEWORK = {
