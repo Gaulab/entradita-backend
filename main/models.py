@@ -8,7 +8,7 @@ class Event(models.Model):
     date = models.DateField()
     creator = models.ForeignKey(User, on_delete=models.CASCADE)
     tickets_counter = models.IntegerField(default=0)
-    capacity = models.IntegerField(default=1000)
+    capacity = models.IntegerField(default=0)
 
     def __str__(self):
         return self.name + " - " + str(self.date)
