@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 
-from ..models import Event, Ticket, Scanner, Vendedor
+from ..models import Event, Ticket, UrlAccess
 
 class EventSerializer(serializers.ModelSerializer):
     class Meta:
@@ -13,12 +13,7 @@ class TicketSerializer(serializers.ModelSerializer):
         model = Ticket
         fields = '__all__'
 
-class ScannerSerializer(serializers.ModelSerializer):
+class UrlAccessSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Scanner
-        fields = '__all__'
-
-class VendedorSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Vendedor
+        model = UrlAccess
         fields = '__all__'
