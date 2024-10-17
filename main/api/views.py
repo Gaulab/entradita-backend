@@ -60,12 +60,14 @@ class EventTickets(APIView):
         return Response(serializer.data)
     
     def post(self, request, event_id):
-        serializer = TicketSerializer(data=request.data)
+        user = request.user
+        event = Event.objects.get(id=event_id)
+        if event.creator != user:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        data = request.data.copy()
+        data['event'] = event_id
+        serializer = TicketSerializer(data=data)
         if serializer.is_valid():
-            user = request.user
-            event = Event.objects.get(id=event_id)
-            if event.creator != user:
-                return Response(status=status.HTTP_403_FORBIDDEN)
             serializer.save(event=event)
             event.tickets_counter += 1
             event.save()
@@ -82,6 +84,21 @@ class EventTickets(APIView):
         event.tickets_counter -= 1
         event.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+class EventURL(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request, event_id):
+        user = request.user
+        event = Event.objects.get(id=event_id)
+        if event.creator != user:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        data = request.data.copy()
+        data['event'] = event_id
+        serializer = UrlAccessSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save(event=event)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])
