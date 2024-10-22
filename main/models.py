@@ -10,9 +10,9 @@ class Event(models.Model):
     password_employee = models.CharField(max_length=100)
     place = models.CharField(max_length=100)
     date = models.DateField()
-    capacity = models.IntegerField(default=0)
+    capacity = models.IntegerField(null=True)
     tickets_counter = models.IntegerField(default=0)
-    image_address = models.CharField(max_length=200, default="https://photos.fife.usercontent.google.com/pw/AP1GczPK2VYQbObxShlqP0dKWIj0ZqtQm1dJ5diNHN3zd6gxE7Lj8TGiCA5jvg=w813-h813-s-no-gm?authuser=1")
+    image_address = models.CharField(max_length=200,null=True,default="https://photos.fife.usercontent.google.com/pw/AP1GczPK2VYQbObxShlqP0dKWIj0ZqtQm1dJ5diNHN3zd6gxE7Lj8TGiCA5jvg=w813-h813-s-no-gm?authuser=1")
     def increment_tickets_counter(self):
         self.tickets_counter += 1
         self.save()
@@ -20,7 +20,7 @@ class Event(models.Model):
         self.tickets_counter -= 1
         self.save()
     def has_capacity(self):
-        return self.tickets_counter < self.capacity
+        return self.capacity is None or self.tickets_counter < self.capacity
     def get_empleados(self):
         return self.empleados.all()
     
@@ -38,7 +38,7 @@ class Employee(models.Model):
         self.status = False
         self.save()
     def has_capacity(self):
-        return self.seller_capacity > self.ticket_counter
+        return self.seller_capacity is None or self.ticket_counter < self.seller_capacity
     def increment_ticket_counter(self):
         self.ticket_counter += 1
         self.save()

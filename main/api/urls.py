@@ -34,8 +34,9 @@ urlpatterns = [
     path('tickets/public/<str:uuid>/', views.PublicTicketDetailView.as_view(), name='get-ticket'),      # GET: Get ticket by public uuid
     # endpoints of scanners
     path('employees/scanner/<str:uuid>/info/', views.ScannerInfoView.as_view(), name='scanner-info'),  # GET: Get scanner info and validate
-    path('tickets/scan/<str:uuid>/', views.ScanTicketView.as_view(), name='scan-ticket')               # PUT: Scan ticket
-    
+    path('tickets/scan/<str:uuid>/', views.ScanTicketView.as_view(), name='scan-ticket'),               # PUT: Scan ticket
+    # endpoints of auth sellers
+    path('events/<str:pk>/check-password/', views.CheckEventPasswordView.as_view(), name='check_event_password'), # POST: Check event password
     
 ]
 # Description: Urls of the api

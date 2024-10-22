@@ -112,6 +112,7 @@ class CreateTicketView(APIView):
         if serializer.is_valid():
             ticket = serializer.save()  # No asignar el campo seller debido a que en esta vista lo crea el organizer
             ticket.event.increment_tickets_counter()
+            ticket.event.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
@@ -271,7 +272,9 @@ class SellerCreateTicketView(APIView):
         if serializer.is_valid():
             ticket = serializer.save(seller=employee, event=event)
             event.increment_tickets_counter()
-            employee.increment_ticket_counter()
+            if event.capacity is not None:
+                employee.increment_ticket_counter()
+            
             employee.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -332,3 +335,21 @@ class ScanTicketView(APIView):
             return Response({"message": "Ticket scanned successfully."}, status=status.HTTP_200_OK)
         else:
             return Response({"error": "Ticket is invalid or already used."}, status=status.HTTP_400_BAD_REQUEST)
+        
+# <--- public views - Auth sellers -------------------------------------------------------------------------------------------->
+        
+# POST: Check event password ---------------------------------------------------->
+class CheckEventPasswordView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, pk):
+        event = get_object_or_404(Event, id=pk)
+        password_employee = request.data.get('password')
+
+        if not password_employee:
+            return Response({"error": "Password is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if event.password_employee == password_employee:
+            return Response({"message": "Password is correct."}, status=status.HTTP_200_OK)
+        else:
+            return Response({"error": "Password is incorrect."}, status=status.HTTP_400_BAD_REQUEST)
