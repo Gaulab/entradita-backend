@@ -1,193 +1,334 @@
+# /entraditaBack/main/api/views.py
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework import generics, permissions
+from django.db import transaction  # Asegúrate de importar transaction
+from ..utils import generate_qr_payload 
 from rest_framework.permissions import IsAuthenticated
 from django.conf import settings
- 
-from .serializers import EventSerializer, TicketSerializer, UrlAccessSerializer
-from ..models import Event, Ticket, UrlAccess
+import hashlib
+from django.shortcuts import get_object_or_404
+from .serializers import EventSerializer, TicketSerializer, EmployeeSerializer
+from ..models import Event, Ticket, Employee
 from ..permissions import IsValidTicketToken
-
+import uuid
 import jwt
 
-# Views
-class UserEvents(APIView):
-    permission_classes = [IsAuthenticated]
+# <--- Testing ------------------------------------------------------------------------------------------------------------>
+class TestView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
     def get(self, request):
-        user = request.user
-        events = Event.objects.filter(creator=user)
-        serializer = EventSerializer(events, many=True)
-        return Response(serializer.data)
+        return Response({"message": "Test view is working!"}, status=status.HTTP_200_OK)
 
-    def post(self, request):
-        user = request.user
-        data = request.data.copy()
-        data['creator'] = user.id
-        serializer = EventSerializer(data=data)
+# <--- Event -------------------------------------------------------------------------------------------------------------->
+
+# POST: Create event
+class CreateEventView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        serializer = EventSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def put(self, request, event_id):
-        user = request.user
-        data = request.data.copy()
-        data['creator'] = user.id
-        try:
-            event = Event.objects.get(id=event_id)
-            if event.creator != user:
-                return Response(status=status.HTTP_403_FORBIDDEN)
-            serializer = EventSerializer(event, data=data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except Event.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+# GET, PUT, DELETE: Manage a specific event --------------------------------------->
+class EventDetailView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
 
-    def delete(self, request, event_id):
-        user = request.user
-        try:
-            event = Event.objects.get(id=event_id)
-            if event.creator != user:
-                return Response(status=status.HTTP_403_FORBIDDEN)
-            event.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        except Event.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+    def get(self, request, pk):
+        event = get_object_or_404(Event, pk=pk, organizer=request.user)
+        serializer = EventSerializer(event)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-
-class EventTickets(APIView):
-    permission_classes = [IsAuthenticated]
-    def get(self, request, event_id, ticket_id):
-        user = request.user
-        event = Event.objects.get(id=event_id)
-        ticket = Ticket.objects.get(id=ticket_id)
-        if event.creator != user:
-            return Response(status=status.HTTP_403_FORBIDDEN)
-        serializer = TicketSerializer(ticket)
-        return Response(serializer.data)
-    
-    def post(self, request, event_id):
-        # Validation
-        user = request.user
-        event = Event.objects.get(id=event_id)
-        if event.creator != user:
-            return Response(status=status.HTTP_403_FORBIDDEN)
-        data = request.data.copy()
-        data['event'] = event_id
-        data['qr_payload'] = 'not safe yet'
-        serializer = TicketSerializer(data=data)
+    def put(self, request, pk):
+        event = get_object_or_404(Event, pk=pk, organizer=request.user)
+        serializer = EventSerializer(event, data=request.data, partial=True)
         if serializer.is_valid():
-            ticket = serializer.save(event=event)
-            # Generate QR payload
-            payload = {
-                'event': event.name,
-                'ticket_id': ticket.id
-            }
-            token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')  # Firmado con HS256
-            ticket.qr_payload = token
-            ticket.save()
-            event.tickets_counter += 1
-            event.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    def delete(self, request, event_id, ticket_id):
-        user = request.user
-        event = Event.objects.get(id=event_id)
-        ticket = Ticket.objects.get(id=ticket_id)
-        if event.creator != user:
-            return Response(status=status.HTTP_403_FORBIDDEN)
-        ticket.delete()
-        event.tickets_counter -= 1
-        event.save()
+
+    def delete(self, request, pk):
+        event = get_object_or_404(Event, pk=pk, organizer=request.user)
+        event.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
-class EventURL(APIView):
-    permission_classes = [IsAuthenticated]
-    def post(self, request, event_id):
-        user = request.user
-        event = Event.objects.get(id=event_id)
-        if event.creator != user:
-            return Response(status=status.HTTP_403_FORBIDDEN)
-        data = request.data.copy()
-        data['event'] = event_id
-        serializer = UrlAccessSerializer(data=data)
-        if serializer.is_valid():
-            serializer.save(event=event)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    def delete(self, request, event_id, urlAccess_id):
-        user = request.user
-        try:
-            event = Event.objects.get(id=event_id)
-            if event.creator != user:
-                return Response(status=status.HTTP_403_FORBIDDEN)
-            urlAccesses = UrlAccess.objects.filter(event=event)
-            urlAccess = UrlAccess.objects.get(id=urlAccess_id)
-            if urlAccess in urlAccesses:
-                urlAccess.delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            else:
-                return Response(status=status.HTTP_404_NOT_FOUND)
-        except UrlAccess.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        except Event.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+
+# GET: List events ---------------------------------------------------------------->
+class EventListView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        events = Event.objects.filter(organizer=request.user)
+        serializer = EventSerializer(events, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_event_data(request, event_id):
-    user = request.user
-    try:
-        event = Event.objects.get(id=event_id)
-        if event.creator != user:
-            return Response(status=status.HTTP_403_FORBIDDEN)
-        # event
-        event_data = EventSerializer(event).data
-        # tickets
+# GET: Get event details, tickets, and employees ----------------------------------># GET: Get event details, tickets, and employees ---------------------------------->
+class EventDetailInfoView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        event = get_object_or_404(Event, id=pk, organizer=request.user)
+
         tickets = Ticket.objects.filter(event=event)
+        employees = Employee.objects.filter(event=event)
+
+        sellers = employees.filter(is_seller=True)
+        escaners = employees.filter(is_seller=False)
+
+        event_data = EventSerializer(event).data
         tickets_data = TicketSerializer(tickets, many=True).data
-        # URLs
-        vendedores = UrlAccess.objects.filter(event=event, is_seller=True)
-        escaners = UrlAccess.objects.filter(event=event, is_seller=False)
-        vendedores_data = UrlAccessSerializer(vendedores, many=True).data
-        escaners_data = UrlAccessSerializer(escaners, many=True).data
-       
-        response_data = {
+
+        for ticket in tickets_data:
+            seller_id = ticket['seller']
+            if seller_id:
+                seller = get_object_or_404(Employee, id=seller_id)
+                ticket['seller_name'] = seller.assigned_name
+            else:  # Asigna el nombre del organizador
+                ticket['seller_name'] = event.organizer.username
+
+        sellers_data = EmployeeSerializer(sellers, many=True).data
+        escaners_data = EmployeeSerializer(escaners, many=True).data
+
+        return Response({
             'event': event_data,
             'tickets': tickets_data,
-            'vendedores': vendedores_data,
-            'escaners': escaners_data
-        }
+            'vendedores': sellers_data,
+            'escaners': escaners_data,
+        }, status=status.HTTP_200_OK)
+
+# <--- Ticket ------------------------------------------------------------------------------------------------------------->
+
+# POST: Create a ticket ----------------------------------------------------------->
+class CreateTicketView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        serializer = TicketSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            ticket = serializer.save()  # No asignar el campo seller debido a que en esta vista lo crea el organizer
+            ticket.event.increment_tickets_counter()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+# GET, PUT, DELETE: Manage a specific ticket -------------------------------------->
+class TicketDetailView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        ticket = get_object_or_404(Ticket, id=pk, event__organizer=request.user)
+        serializer = TicketSerializer(ticket)
+        ticket_data = serializer.data
+
+        # Obtener el nombre del vendedor
+        seller_id = ticket_data.get('seller')
+        if seller_id:
+            seller = get_object_or_404(Employee, id=seller_id)
+            ticket_data['seller_name'] = seller.assigned_name
+        else:
+            ticket_data['seller_name'] = ticket.event.organizer.username
+
+        return Response(ticket_data, status=status.HTTP_200_OK)
+
+
+    # No se usa, no se modifican tickets
+    def put(self, request, pk):
+        ticket = get_object_or_404(Ticket, pk=pk, event__organizer=request.user)
+        serializer = TicketSerializer(ticket, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        ticket = get_object_or_404(Ticket, id=pk, event__organizer=request.user)
+        ticket.event.decrement_tickets_counter()
+        ticket.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+# GET: List tickets of an event --------------------------------------------------->
+class TicketListView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        event = get_object_or_404(Event, id=pk, organizer=request.user)
+        tickets = Ticket.objects.filter(event=event)
+        serializer = TicketSerializer(tickets, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+# <--- Employees ---------------------------------------------------------------------------------------------------------->
+
+# POST: Create employee ----------------------------------------------------------->
+class CreateEmpleadoView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        serializer = EmployeeSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# GET, PUT, DELETE: Manage a specific employee ------------------------------------>
+class EmpleadoDetailView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        empleado = get_object_or_404(Employee, id=pk, event__organizer=request.user)
+        serializer = EmployeeSerializer(empleado)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    # No se usa, no se modifican empleados
+    def put(self, request, pk):
+        empleado = get_object_or_404(Employee, pk=pk, event__organizer=request.user)
+        serializer = EmployeeSerializer(empleado, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        empleado = get_object_or_404(Employee, id=pk, event__organizer=request.user)
         
+        if empleado.status == True:
+            # Deshabilitar al empleado
+            empleado.disable()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            # Usar una transacción para asegurarte de que todas las operaciones se realicen correctamente
+            with transaction.atomic():
+                # Obtener todos los tickets asociados
+                tickets = Ticket.objects.filter(seller=empleado)
+
+                # Decrementar el contador de tickets del evento
+                event = empleado.event
+                event.tickets_counter -= tickets.count()  # Decrementa el contador
+                event.save()  # Guarda los cambios en el evento
+
+                # Eliminar todos los tickets asociados
+                tickets.delete()
+
+                # Eliminar al empleado
+                empleado.delete()
+
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+# GET: List employees of an event ------------------------------------------------->
+class EmpleadoListView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        event = get_object_or_404(Event, id=pk, organizer=request.user)
+        empleados = Employee.objects.filter(event=event)
+        serializer = EmployeeSerializer(empleados, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+# <--- public views - Sellers --------------------------------------------------------------------------------------------->
+
+# GET: Get vendedor info ---------------------------------------------------------->
+class SellerInfoView(APIView):
+    permission_classes = [permissions.AllowAny]  # Mantener AllowAny
+
+    def get(self, request, uuid):
+        
+        empleado = get_object_or_404(Employee, uuid=uuid, is_seller=True)# Obtener el empleado por su UUID y verificar que es un vendedor
+        empleado_serializer = EmployeeSerializer(empleado)# Serializar los datos del vendedor
+        tickets = empleado.tickets_created.all()# Obtener los tickets creados por el vendedor utilizando la relación inversa (FK)
+        tickets_serializer = TicketSerializer(tickets, many=True)# Serializar los tickets
+        # Devolver la información del vendedor y los tickets que ha creado
+        return Response({
+            'vendedor': empleado_serializer.data,
+            'tickets': tickets_serializer.data
+        }, status=status.HTTP_200_OK)
+
+# POST: Create ticket by seller ------------------------------------------------->
+class SellerCreateTicketView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, uuid):
+        employee = get_object_or_404(Employee, uuid=uuid, is_seller=True, status=True)  # Get the employee by UUID and verify they are a seller with status True
+        
+        # Verify that the event has capacity
+        event = employee.event
+        if not event.has_capacity():
+            return Response({"error": "Event has reached its capacity."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Verify that the seller has capacity
+        if not employee.has_capacity():
+            return Response({"error": "Seller has reached their capacity."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Add the event to the request data
+        request.data['event'] = event.id
+
+        # Create the ticket
+        serializer = TicketSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            ticket = serializer.save(seller=employee, event=event)
+            event.increment_tickets_counter()
+            employee.increment_ticket_counter()
+            employee.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# DELETE: Delete ticket by seller ----------------------------------------------->
+class VendedorDeleteTicketView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def delete(self, request, uuid, ticket_id):
+        employee = get_object_or_404(Employee, uuid=uuid, is_seller=True, status=True)
+        ticket = get_object_or_404(Ticket, id=ticket_id, seller=employee)
+
+        ticket.delete()
+        employee.decrement_ticket_counter()
+        employee.save()
+        ticket.event.decrement_tickets_counter()
+        ticket.event.save()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+# GET: Get ticket by public UUID
+class PublicTicketDetailView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, uuid):
+        ticket = get_object_or_404(Ticket, uuid=uuid)
+        serializer = TicketSerializer(ticket)
+        response_data = serializer.data
+        response_data['event_name'] = ticket.event.name  # Include the event name in the response
+        response_data['event_image_address'] = ticket.event.image_address  # Include the event image address in the response
+        response_data['event_place'] = ticket.event.place  # Include the event location in the response
+        response_data['event_date'] = ticket.event.date  # Include the event date in the response
         return Response(response_data, status=status.HTTP_200_OK)
-    
-    except Event.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-    
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_event(request, event_id):
-    user = request.user
-    try:
-        event = Event.objects.get(id=event_id)
-        if event.creator != user:
-            return Response(status=status.HTTP_403_FORBIDDEN)
-        serializer = EventSerializer(event)
-        return Response(serializer.data)
-    except Event.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-    
-@api_view(['GET'])
-@permission_classes([IsValidTicketToken])
-def get_ticket(request, ticket_token):
-    payload = jwt.decode(ticket_token, settings.SECRET_KEY, algorithms=['HS256'])
-    ticket = Ticket.objects.get(id=payload.get('ticket_id'))
-    serializer = TicketSerializer(ticket)
-    return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
+
+# <--- public views - Scanners -------------------------------------------------------------------------------------------->
+
+# GET: Get scanner info and validate ---------------------------------------------->
+class ScannerInfoView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, uuid):
+        scanner = get_object_or_404(Employee, uuid=uuid, is_seller=False)  # Get the employee by UUID and verify they are a scanner
+        serializer = EmployeeSerializer(scanner)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+# PUT: Scan ticket --------------------------------------------------------------->
+class ScanTicketView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def put(self, request, uuid):
+        scanner = get_object_or_404(Employee, uuid=uuid, is_seller=False, status=True)  # Get the scanner by UUID and verify they are active
+        ticket_uuid = request.data.get('ticket_uuid')
+        ticket = get_object_or_404(Ticket, uuid=ticket_uuid)
+
+        if ticket.is_valid():
+            ticket.mark_as_used()
+            return Response({"message": "Ticket scanned successfully."}, status=status.HTTP_200_OK)
+        else:
+            return Response({"error": "Ticket is invalid or already used."}, status=status.HTTP_400_BAD_REQUEST)

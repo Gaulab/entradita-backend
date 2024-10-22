@@ -1,15 +1,48 @@
 from django.urls import path
-
 from . import views
+from rest_framework_simplejwt.views import (TokenObtainPairView,TokenRefreshView)
+
 
 urlpatterns = [
-    path('event/<int:event_id>/', views.get_event, name='event'),
-    path('events/', views.UserEvents.as_view(), name='events'),
-    path('events/<int:event_id>/', views.UserEvents.as_view(), name='events_id'),
-    path('events/<int:event_id>/tickets/', views.EventTickets.as_view(), name='event_tickets'),
-    path('events/<int:event_id>/tickets/<int:ticket_id>/', views.EventTickets.as_view(), name='event_tickets_id'),
-    path('events/<int:event_id>/urlAccess/', views.EventURL.as_view(), name='event_url'),
-    path('events/<int:event_id>/urlAccess/<int:urlAccess_id>/', views.EventURL.as_view(), name='event_url_id'),
-    path('eventData/<int:event_id>/tickets/', views.get_event_data, name='get_event_data'),
-    path('tickets/<str:ticket_token>/', views.get_ticket, name='ticket'),
+    
+    # Private endpoints ------------------------------------------------------------------------------------------>
+    # endpoints of test
+    path('test/', views.TestView.as_view(), name='info'),                                              # GET: Test view
+    # endpoints of auth                                                                                FIXME: Revisar santi crack de jwt   
+    path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    # endpoints of events
+    path('events/create/', views.CreateEventView.as_view(), name='event-create'),                      # POST: Create event
+    path('events/<int:pk>/', views.EventDetailView.as_view(), name='event-detail'),                    # GET, PUT, DELETE: Manage a specific event
+    path('events/', views.EventListView.as_view(), name='event-list'),                                 # GET: List events
+    path('events/<int:pk>/details/', views.EventDetailInfoView.as_view(), name='event-detail-info'),   # GET: Get event details, tickets, and employees
+    # endpoints of tickets
+    path('tickets/', views.CreateTicketView.as_view(), name='create-ticket'),                          # POST: Create ticket
+    path('tickets/<int:pk>/', views.TicketDetailView.as_view(), name='ticket-detail'),                 # GET, PUT, DELETE: Manage a specific ticket
+    path('events/<int:pk>/tickets/', views.TicketListView.as_view(), name='ticket-list'),              # GET: List tickets of an event
+    # endpoints of employees
+    path('employees/', views.CreateEmpleadoView.as_view(), name='create-employee'),                    # POST: Create employee
+    path('employees/<int:pk>/', views.EmpleadoDetailView.as_view(), name='empleado-detail'),           # GET, PUT, DELETE: Manage a specific empleado
+    path('events/<int:pk>/employees/', views.EmpleadoListView.as_view(), name='employee-list'),        # GET: List empleados of an event
+    
+    # Public endpoints ------------------------------------------------------------------------------------------>
+    # endpoints of sellers
+    path('employees/seller/<str:uuid>/info/', views.SellerInfoView.as_view(), name='seller-info'),     # GET: Get vendedor info and validate
+    path('employees/seller/<str:uuid>/create-ticket/', views.SellerCreateTicketView.as_view(), name='vendedor-create-ticket'), # POST: Create ticket by vendedor
+    path('employees/seller/<str:uuid>/delete-ticket/<int:ticket_id>/', views.VendedorDeleteTicketView.as_view(), name='vendedor-delete-ticket'), # DELETE: Delete ticket by vendedor
+    # endpoints of tickets
+    path('tickets/public/<str:uuid>/', views.PublicTicketDetailView.as_view(), name='get-ticket'),      # GET: Get ticket by public uuid
+    # endpoints of scanners
+    path('employees/scanner/<str:uuid>/info/', views.ScannerInfoView.as_view(), name='scanner-info'),  # GET: Get scanner info and validate
+    path('tickets/scan/<str:uuid>/', views.ScanTicketView.as_view(), name='scan-ticket')               # PUT: Scan ticket
+    
+    
 ]
+# Description: Urls of the api
+# Endpoints:
+#   - Private endpoints:
+#       - Test view
+#       - Token obtain pair view
+#       - Token refresh view
+#       - Create event view
+#       - Event detail view
