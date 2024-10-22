@@ -2,8 +2,8 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from ..models import Event, Ticket, Employee
-from decouple import config
 from ..utils import generate_qr_payload 
+
 class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event

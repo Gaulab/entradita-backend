@@ -325,16 +325,16 @@ class ScannerInfoView(APIView):
 class ScanTicketView(APIView):
     permission_classes = [permissions.AllowAny]
 
-    def put(self, request, uuid):
-        scanner = get_object_or_404(Employee, uuid=uuid, is_seller=False, status=True)  # Get the scanner by UUID and verify they are active
-        ticket_uuid = request.data.get('ticket_uuid')
-        ticket = get_object_or_404(Ticket, uuid=ticket_uuid)
+    def put(self, request, payload):
+        ticket = get_object_or_404(Ticket, qr_payload=payload, event=request.data.get('event_id'))  # Get the scanner by UUID and verify they are active
+        serializer = TicketSerializer(ticket)
 
-        if ticket.is_valid():
-            ticket.mark_as_used()
-            return Response({"message": "Ticket scanned successfully."}, status=status.HTTP_200_OK)
-        else:
-            return Response({"error": "Ticket is invalid or already used."}, status=status.HTTP_400_BAD_REQUEST)
+        if ticket.scanned:  # Verify that the ticket has not been scanned
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        ticket.scan()  # Scan the ticket
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
         
 # <--- public views - Auth sellers -------------------------------------------------------------------------------------------->
         

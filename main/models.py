@@ -12,7 +12,7 @@ class Event(models.Model):
     date = models.DateField()
     capacity = models.IntegerField(null=True)
     tickets_counter = models.IntegerField(default=0)
-    image_address = models.CharField(max_length=200,null=True,default="https://photos.fife.usercontent.google.com/pw/AP1GczPK2VYQbObxShlqP0dKWIj0ZqtQm1dJ5diNHN3zd6gxE7Lj8TGiCA5jvg=w813-h813-s-no-gm?authuser=1")
+    image_address = models.CharField(max_length=200, null=True, default="https://photos.fife.usercontent.google.com/pw/AP1GczPK2VYQbObxShlqP0dKWIj0ZqtQm1dJ5diNHN3zd6gxE7Lj8TGiCA5jvg=w813-h813-s-no-gm?authuser=1")
     def increment_tickets_counter(self):
         self.tickets_counter += 1
         self.save()

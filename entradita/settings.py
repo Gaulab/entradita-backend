@@ -13,7 +13,6 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
-from corsheaders.defaults import default_headers
 from decouple import config
 
 # Key for encryption qrpayloads

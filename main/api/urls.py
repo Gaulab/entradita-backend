@@ -1,6 +1,5 @@
 from django.urls import path
 from . import views
-from rest_framework_simplejwt.views import (TokenObtainPairView,TokenRefreshView)
 
 
 urlpatterns = [
@@ -8,9 +7,6 @@ urlpatterns = [
     # Private endpoints ------------------------------------------------------------------------------------------>
     # endpoints of test
     path('test/', views.TestView.as_view(), name='info'),                                              # GET: Test view
-    # endpoints of auth                                                                                FIXME: Revisar santi crack de jwt   
-    path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     # endpoints of events
     path('events/create/', views.CreateEventView.as_view(), name='event-create'),                      # POST: Create event
     path('events/<int:pk>/', views.EventDetailView.as_view(), name='event-detail'),                    # GET, PUT, DELETE: Manage a specific event
@@ -34,11 +30,12 @@ urlpatterns = [
     path('tickets/public/<str:uuid>/', views.PublicTicketDetailView.as_view(), name='get-ticket'),      # GET: Get ticket by public uuid
     # endpoints of scanners
     path('employees/scanner/<str:uuid>/info/', views.ScannerInfoView.as_view(), name='scanner-info'),  # GET: Get scanner info and validate
-    path('tickets/scan/<str:uuid>/', views.ScanTicketView.as_view(), name='scan-ticket'),               # PUT: Scan ticket
+    path('tickets/scan/<str:payload>/', views.ScanTicketView.as_view(), name='scan-ticket'),               # PUT: Scan ticket
     # endpoints of auth sellers
     path('events/<str:pk>/check-password/', views.CheckEventPasswordView.as_view(), name='check_event_password'), # POST: Check event password
     
 ]
+
 # Description: Urls of the api
 # Endpoints:
 #   - Private endpoints:
@@ -47,3 +44,4 @@ urlpatterns = [
 #       - Token refresh view
 #       - Create event view
 #       - Event detail view
+#       - Event list view
