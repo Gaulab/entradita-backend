@@ -33,6 +33,8 @@ DEBUG = False
 
 ALLOWED_HOSTS = ['localhost','entraditaback-production.up.railway.app']
 
+CRSF_TRUSTED_ORIGINS = ['localhost','https://entraditaback-production.up.railway.app']
+
 
 # Application definition
 
