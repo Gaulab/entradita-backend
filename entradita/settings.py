@@ -31,7 +31,7 @@ SECRET_KEY = '46c537df2be36f751ddb031d70f5e1c187d913938710c1f309bce0c392b0b3f3'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['localhost','entraditaback-production.up.railway.app']
 
 
 # Application definition
