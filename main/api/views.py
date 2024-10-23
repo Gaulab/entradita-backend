@@ -18,7 +18,7 @@ import jwt
 
 # <--- Testing ------------------------------------------------------------------------------------------------------------>
 class TestView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     def get(self, request):
         return Response({"message": "Test view is working!"}, status=status.HTTP_200_OK)
 
