@@ -330,10 +330,24 @@ class ScanTicketView(APIView):
         serializer = TicketSerializer(ticket)
 
         if ticket.scanned:  # Verify that the ticket has not been scanned
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response({"old_scanned":True, "ticket": serializer.data}, status=status.HTTP_200_OK)
         
         ticket.scan()  # Scan the ticket
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response({"old_scanned":False, "ticket": serializer.data}, status=status.HTTP_200_OK)
+    
+# PUT: payload ticket by DNI --------------------------------------------------------->
+class ScanTicketDniView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def put(self, request, dni):
+        ticket = get_object_or_404(Ticket, owner_dni = dni, event=request.data.get('event_id'))  # Get the scanner by UUID and verify they are active
+        serializer = TicketSerializer(ticket)
+
+        if ticket.scanned:  # Verify that the ticket has not been scanned
+            return Response({"old_scanned":True, "ticket": serializer.data}, status=status.HTTP_200_OK)
+        
+        ticket.scan()  # Scan the ticket
+        return Response({"old_scanned":False, "ticket": serializer.data}, status=status.HTTP_200_OK)
 
         
 # <--- public views - Auth sellers -------------------------------------------------------------------------------------------->

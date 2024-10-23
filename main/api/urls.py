@@ -1,10 +1,15 @@
 from django.urls import path
 from . import views
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
 
 
 urlpatterns = [
     
     # Private endpoints ------------------------------------------------------------------------------------------>
+    path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),  # POST: Obtener token
     # endpoints of test
     path('test/', views.TestView.as_view(), name='info'),                                              # GET: Test view
     # endpoints of events
@@ -30,7 +35,8 @@ urlpatterns = [
     path('tickets/public/<str:uuid>/', views.PublicTicketDetailView.as_view(), name='get-ticket'),      # GET: Get ticket by public uuid
     # endpoints of scanners
     path('employees/scanner/<str:uuid>/info/', views.ScannerInfoView.as_view(), name='scanner-info'),  # GET: Get scanner info and validate
-    path('tickets/scan/<str:payload>/', views.ScanTicketView.as_view(), name='scan-ticket'),               # PUT: Scan ticket
+    path('tickets/scan/<str:payload>/', views.ScanTicketView.as_view(), name='scan-ticket'),           # PUT: Scan ticket
+    path('tickets/scan/dni/<str:dni>/', views.ScanTicketDniView.as_view(), name='scan-ticket-by-dni'),            # PUT: Scan ticket
     # endpoints of auth sellers
     path('events/<str:pk>/check-password/', views.CheckEventPasswordView.as_view(), name='check_event_password'), # POST: Check event password
     
