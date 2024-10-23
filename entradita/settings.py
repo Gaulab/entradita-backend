@@ -15,6 +15,11 @@ from pathlib import Path
 from datetime import timedelta
 from decouple import config
 import os
+import dj_database_url
+from dotenv import load_dotenv
+
+
+load_dotenv()
 # Key for encryption qrpayloads
 ENCRYPTION_KEY = config('ENCRYPTION_KEY')
 
@@ -91,10 +96,7 @@ WSGI_APPLICATION = 'entradita.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(default=os.getenv('DATABASE_URL'))
 }
 
 
