@@ -2,6 +2,7 @@ asgiref==3.8.1
 cffi==1.17.1
 cryptography==43.0.1
 DateTime==5.5
+dj-database-url==2.2.0
 Django==3.2
 django-cors-headers==4.5.0
 django-extensions==3.2.3
@@ -10,12 +11,15 @@ djangorestframework==3.15.1
 djangorestframework-simplejwt==5.3.1
 gunicorn==23.0.0
 packaging==24.1
+psycopg2==2.9.10
 pycparser==2.22
 PyJWT==2.1.0
 python-decouple==3.8
+python-dotenv==1.0.1
 pytz==2024.2
 setuptools==75.2.0
 sqlparse==0.5.1
+typing_extensions==4.12.2
 tzdata==2024.2
 whitenoise==6.7.0
 zope.interface==7.1.0
