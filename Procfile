@@ -1,1 +1,1 @@
-web: gunicorn entradita.wsgi
+web: python manage.py collectstatic && gunicorn entradita.wsgi
