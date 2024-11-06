@@ -12,7 +12,6 @@ import hashlib
 from django.shortcuts import get_object_or_404
 from .serializers import EventSerializer, TicketSerializer, EmployeeSerializer
 from ..models import Event, Ticket, Employee
-from ..permissions import IsValidTicketToken
 import uuid
 import jwt
 
