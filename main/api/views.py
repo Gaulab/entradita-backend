@@ -323,7 +323,10 @@ class ScanTicketView(APIView):
             return Response({"old_scanned":True, "ticket": serializer.data}, status=status.HTTP_200_OK)
         
         ticket.scan()  # Scan the ticket
+        scanner = get_object_or_404(Employee, id=request.data.get('scanner_id'), is_seller=False, is_deleted=False)
+        scanner.increment_ticket_counter()
         return Response({"old_scanned":False, "ticket": serializer.data}, status=status.HTTP_200_OK)
+    
     
 # PUT: payload ticket by DNI --------------------------------------------------------->
 class ScanTicketDniView(APIView):
