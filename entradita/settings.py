@@ -17,9 +17,6 @@ from decouple import config
 import os
 import dj_database_url
 from dotenv import load_dotenv
-import rest_framework.renderers
-import django.conf 
-import settings
 
 
 load_dotenv()
@@ -168,8 +165,7 @@ REST_FRAMEWORK = {
     ] if not DEBUG else [
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
-    ],
-        
+    ],       
 }
 
 # JWT configuration
