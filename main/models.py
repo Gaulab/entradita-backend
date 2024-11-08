@@ -13,6 +13,8 @@ class Event(models.Model):
     capacity = models.IntegerField(null=True)
     tickets_counter = models.IntegerField(default=0)
     image_address = models.CharField(max_length=200, null=True, default="https://photos.fife.usercontent.google.com/pw/AP1GczPK2VYQbObxShlqP0dKWIj0ZqtQm1dJ5diNHN3zd6gxE7Lj8TGiCA5jvg=w813-h813-s-no-gm?authuser=1")
+    is_deleted = models.BooleanField(default=False)
+    
     def increment_tickets_counter(self):
         self.tickets_counter += 1
         self.save()
@@ -22,8 +24,14 @@ class Event(models.Model):
     def has_capacity(self):
         return self.capacity is None or self.tickets_counter < self.capacity
     def get_empleados(self):
-        return self.empleados.all()
-    
+        return self.empleados.filter(is_deleted=False)
+    def soft_delete(self):
+        self.is_deleted = True
+        self.save()
+        for employee in self.empleados.all():
+            employee.soft_delete()
+        for ticket in self.tickets.all():
+            ticket.soft_delete()
 
 class Employee(models.Model):
     id = models.AutoField(primary_key=True) # PK
@@ -34,6 +42,7 @@ class Employee(models.Model):
     ticket_counter = models.IntegerField(default=0)
     uuid = models.CharField(max_length=36, unique=True, default=uuid.uuid4) 
     status = models.BooleanField(default=True)
+    is_deleted = models.BooleanField(default=False)
     def disable(self):
         self.status = False
         self.save()
@@ -45,6 +54,12 @@ class Employee(models.Model):
     def decrement_ticket_counter(self):
         self.ticket_counter -= 1
         self.save()
+    def soft_delete(self):
+        self.is_deleted = True
+        self.save()
+        for ticket in self.tickets_created.all():
+            ticket.soft_delete()
+        
     
 class Ticket(models.Model):
     id = models.AutoField(primary_key=True) # PK
@@ -56,7 +71,10 @@ class Ticket(models.Model):
     qr_payload = models.CharField(max_length=64)
     scanned = models.BooleanField(default=False)
     uuid = models.CharField(max_length=36, unique=True, default=uuid.uuid4)
+    is_deleted = models.BooleanField(default=False)
     def scan(self):
         self.scanned = True
         self.save()
-
+    def soft_delete(self):
+        self.is_deleted = True
+        self.save()

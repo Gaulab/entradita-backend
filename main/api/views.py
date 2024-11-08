@@ -39,12 +39,12 @@ class EventDetailView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, pk):
-        event = get_object_or_404(Event, pk=pk, organizer=request.user)
+        event = get_object_or_404(Event, pk=pk, organizer=request.user, is_deleted = False)
         serializer = EventSerializer(event)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, pk):
-        event = get_object_or_404(Event, pk=pk, organizer=request.user)
+        event = get_object_or_404(Event, pk = pk, organizer = request.user, is_deleted = False)
         serializer = EventSerializer(event, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -52,8 +52,8 @@ class EventDetailView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
-        event = get_object_or_404(Event, pk=pk, organizer=request.user)
-        event.delete()
+        event = get_object_or_404(Event, pk = pk, organizer = request.user, is_deleted = False)
+        event.soft_delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 # GET: List events ---------------------------------------------------------------->
@@ -61,24 +61,22 @@ class EventListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        events = Event.objects.filter(organizer=request.user)
+        events = Event.objects.filter(organizer = request.user, is_deleted = False)
         serializer = EventSerializer(events, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-# GET: Get event details, tickets, and employees ----------------------------------># GET: Get event details, tickets, and employees ---------------------------------->
+# GET: Get event details, tickets, and employees ---------------------------------->
 class EventDetailInfoView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, pk):
-        event = get_object_or_404(Event, id=pk, organizer=request.user)
-
-        tickets = Ticket.objects.filter(event=event)
-        employees = Employee.objects.filter(event=event)
-
+        event = get_object_or_404(Event, id = pk, organizer = request.user, is_deleted = False)
+        tickets = Ticket.objects.filter(event = event, is_deleted = False)
+        employees = Employee.objects.filter(event = event, is_deleted = False)
+        
         sellers = employees.filter(is_seller=True)
         escaners = employees.filter(is_seller=False)
-
         event_data = EventSerializer(event).data
         tickets_data = TicketSerializer(tickets, many=True).data
 
@@ -120,7 +118,7 @@ class TicketDetailView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, pk):
-        ticket = get_object_or_404(Ticket, id=pk, event__organizer=request.user)
+        ticket = get_object_or_404(Ticket, id=pk, event__organizer=request.user, is_deleted=False)
         serializer = TicketSerializer(ticket)
         ticket_data = serializer.data
 
@@ -131,13 +129,12 @@ class TicketDetailView(APIView):
             ticket_data['seller_name'] = seller.assigned_name
         else:
             ticket_data['seller_name'] = ticket.event.organizer.username
-
         return Response(ticket_data, status=status.HTTP_200_OK)
 
 
     # No se usa, no se modifican tickets
     def put(self, request, pk):
-        ticket = get_object_or_404(Ticket, pk=pk, event__organizer=request.user)
+        ticket = get_object_or_404(Ticket, pk=pk, event__organizer=request.user, is_deleted=False)
         serializer = TicketSerializer(ticket, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -145,10 +142,9 @@ class TicketDetailView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
-        ticket = get_object_or_404(Ticket, id=pk, event__organizer=request.user)
+        ticket = get_object_or_404(Ticket, id=pk, event__organizer=request.user, is_deleted=False)
         ticket.event.decrement_tickets_counter()
-        ticket.delete()
-
+        ticket.soft_delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 # GET: List tickets of an event --------------------------------------------------->
@@ -156,8 +152,8 @@ class TicketListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, pk):
-        event = get_object_or_404(Event, id=pk, organizer=request.user)
-        tickets = Ticket.objects.filter(event=event)
+        event = get_object_or_404(Event, id=pk, organizer=request.user, is_deleted=False)
+        tickets = Ticket.objects.filter(event=event, is_deleted=False)
         serializer = TicketSerializer(tickets, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -180,13 +176,13 @@ class EmpleadoDetailView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, pk):
-        empleado = get_object_or_404(Employee, id=pk, event__organizer=request.user)
+        empleado = get_object_or_404(Employee, id=pk, event__organizer=request.user, is_deleted=False)
         serializer = EmployeeSerializer(empleado)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     # No se usa, no se modifican empleados
     def put(self, request, pk):
-        empleado = get_object_or_404(Employee, pk=pk, event__organizer=request.user)
+        empleado = get_object_or_404(Employee, pk=pk, event__organizer=request.user, is_deleted=False)
         serializer = EmployeeSerializer(empleado, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -194,28 +190,25 @@ class EmpleadoDetailView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
-        empleado = get_object_or_404(Employee, id=pk, event__organizer=request.user)
+        empleado = get_object_or_404(Employee, id=pk, event__organizer=request.user, is_deleted=False)
         
         if empleado.status == True:
             # Deshabilitar al empleado
             empleado.disable()
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
-            # Usar una transacción para asegurarte de que todas las operaciones se realicen correctamente
+            # Usar una transacción para asegurar que todas las operaciones se realicen correctamente
             with transaction.atomic():
-                # Obtener todos los tickets asociados
-                tickets = Ticket.objects.filter(seller=empleado)
-
-                # Decrementar el contador de tickets del evento
+                # Obtener el evento del empleado y contar sus tickets activos
                 event = empleado.event
-                event.tickets_counter -= tickets.count()  # Decrementa el contador
-                event.save()  # Guarda los cambios en el evento
-
-                # Eliminar todos los tickets asociados
-                tickets.delete()
-
-                # Eliminar al empleado
-                empleado.delete()
+                tickets_count = empleado.tickets_created.filter(is_deleted=False).count()
+                
+                # Decrementar el contador de tickets del evento en función de los tickets del empleado
+                event.tickets_counter -= tickets_count
+                event.save()
+                
+                # Realizar la eliminación lógica en el empleado y sus tickets asociados
+                empleado.soft_delete()
 
             return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -224,8 +217,8 @@ class EmpleadoListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, pk):
-        event = get_object_or_404(Event, id=pk, organizer=request.user)
-        empleados = Employee.objects.filter(event=event)
+        event = get_object_or_404(Event, id=pk, organizer=request.user, is_deleted=False)
+        empleados = Employee.objects.filter(event=event, is_deleted=False)
         serializer = EmployeeSerializer(empleados, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -237,9 +230,10 @@ class SellerInfoView(APIView):
 
     def get(self, request, uuid):
         
-        empleado = get_object_or_404(Employee, uuid=uuid, is_seller=True)# Obtener el empleado por su UUID y verificar que es un vendedor
+        empleado = get_object_or_404(Employee, uuid = uuid, is_seller = True, is_deleted=False)# Obtener el empleado por su UUID y verificar que es un vendedor
         empleado_serializer = EmployeeSerializer(empleado)# Serializar los datos del vendedor
-        tickets = empleado.tickets_created.all()# Obtener los tickets creados por el vendedor utilizando la relación inversa (FK)
+        
+        tickets = Ticket.objects.filter(seller = empleado, is_deleted=False)# Obtener los tickets del vendedor
         tickets_serializer = TicketSerializer(tickets, many=True)# Serializar los tickets
         # Devolver la información del vendedor y los tickets que ha creado
         return Response({
@@ -283,15 +277,12 @@ class VendedorDeleteTicketView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def delete(self, request, uuid, ticket_id):
-        employee = get_object_or_404(Employee, uuid=uuid, is_seller=True, status=True)
-        ticket = get_object_or_404(Ticket, id=ticket_id, seller=employee)
+        employee = get_object_or_404(Employee, uuid=uuid, is_seller=True, status=True, is_deleted=False)  # Get the employee by UUID and verify they are a seller with status True
+        ticket = get_object_or_404(Ticket, id=ticket_id, seller=employee, is_deleted=False)  # Get the ticket by ID and verify it belongs to the employee
 
-        ticket.delete()
+        ticket.soft_delete()
         employee.decrement_ticket_counter()
-        employee.save()
         ticket.event.decrement_tickets_counter()
-        ticket.event.save()
-
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 # GET: Get ticket by public UUID
@@ -299,7 +290,7 @@ class PublicTicketDetailView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, uuid):
-        ticket = get_object_or_404(Ticket, uuid=uuid)
+        ticket = get_object_or_404(Ticket, uuid=uuid, is_deleted=False)
         serializer = TicketSerializer(ticket)
         response_data = serializer.data
         response_data['event_name'] = ticket.event.name  # Include the event name in the response
@@ -316,7 +307,7 @@ class ScannerInfoView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, uuid):
-        scanner = get_object_or_404(Employee, uuid=uuid, is_seller=False)  # Get the employee by UUID and verify they are a scanner
+        scanner = get_object_or_404(Employee, uuid=uuid, is_seller=False, is_deleted=False)  # Get the employee by UUID and verify they are a scanner
         serializer = EmployeeSerializer(scanner)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -325,7 +316,7 @@ class ScanTicketView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def put(self, request, payload):
-        ticket = get_object_or_404(Ticket, qr_payload=payload, event=request.data.get('event_id'))  # Get the scanner by UUID and verify they are active
+        ticket = get_object_or_404(Ticket, qr_payload=payload, event=request.data.get('event_id', is_deleted=False))  # Get the scanner by UUID and verify they are active
         serializer = TicketSerializer(ticket)
 
         if ticket.scanned:  # Verify that the ticket has not been scanned
@@ -339,7 +330,7 @@ class ScanTicketDniView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def put(self, request, dni):
-        ticket = get_object_or_404(Ticket, owner_dni = dni, event=request.data.get('event_id'))  # Get the scanner by UUID and verify they are active
+        ticket = get_object_or_404(Ticket, owner_dni = dni, event=request.data.get('event_id'), is_deleted=False)  # Get the scanner by UUID and verify they are active
         serializer = TicketDniSerializer(ticket)
 
         if ticket.scanned:  # Verify that the ticket has not been scanned
