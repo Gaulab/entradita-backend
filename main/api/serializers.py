@@ -9,6 +9,7 @@ class EventSerializer(serializers.ModelSerializer):
         model = Event
         fields = '__all__'
         read_only_fields = ['organizer']  # Hacer que el campo organizer sea de solo lectura
+    
     def create(self, validated_data):
         validated_data['organizer'] = self.context['request'].user
         return super().create(validated_data)
