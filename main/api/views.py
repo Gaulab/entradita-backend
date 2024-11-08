@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.conf import settings
 import hashlib
 from django.shortcuts import get_object_or_404
-from .serializers import EventSerializer, TicketSerializer, EmployeeSerializer
+from .serializers import EventSerializer, TicketSerializer, EmployeeSerializer, TicketDniSerializer
 from ..models import Event, Ticket, Employee
 import uuid
 import jwt
@@ -340,10 +340,10 @@ class ScanTicketDniView(APIView):
 
     def put(self, request, dni):
         ticket = get_object_or_404(Ticket, owner_dni = dni, event=request.data.get('event_id'))  # Get the scanner by UUID and verify they are active
-        serializer = TicketSerializer(ticket)
+        serializer = TicketDniSerializer(ticket)
 
         if ticket.scanned:  # Verify that the ticket has not been scanned
-            return Response({"old_scanned":True, "ticket": serializer.data}, status=status.HTTP_200_OK)
+            return Response({"old_scanned":True, "ticket": serializer.data}, status=status.HTTP_200_OK) 
         
         ticket.scan()  # Scan the ticket
         return Response({"old_scanned":False, "ticket": serializer.data}, status=status.HTTP_200_OK)

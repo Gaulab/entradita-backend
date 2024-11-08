@@ -26,6 +26,11 @@ class TicketSerializer(serializers.ModelSerializer):
         owner_dni = validated_data.get('owner_dni')
         validated_data['qr_payload'] = generate_qr_payload(owner_name, owner_lastname, owner_dni)
         return super().create(validated_data)
+    
+class TicketDniSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ticket
+        fields = ['owner_name', 'owner_lastname', 'owner_dni']
 
 class EmployeeSerializer(serializers.ModelSerializer):
     class Meta:
