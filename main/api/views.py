@@ -66,18 +66,22 @@ class EventListView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-# GET: Get event details, tickets, and employees ---------------------------------->
+# GET: Get event details -------------------------------------------------------->
 class EventDetailInfoView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, pk):
-        event = get_object_or_404(Event, id = pk, organizer = request.user, is_deleted = False)
-        tickets = Ticket.objects.filter(event = event, is_deleted = False)
-        employees = Employee.objects.filter(event = event, is_deleted = False)
-        
-        sellers = employees.filter(is_seller=True)
-        escaners = employees.filter(is_seller=False)
+        event = get_object_or_404(Event, id=pk, organizer=request.user, is_deleted=False)
         event_data = EventSerializer(event).data
+        return Response({'event': event_data}, status=status.HTTP_200_OK)
+
+# GET: Get event tickets -------------------------------------------------------->
+class EventTicketsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        event = get_object_or_404(Event, id=pk, organizer=request.user, is_deleted=False)
+        tickets = Ticket.objects.filter(event=event, is_deleted=False)
         tickets_data = TicketSerializer(tickets, many=True).data
 
         for ticket in tickets_data:
@@ -85,18 +89,30 @@ class EventDetailInfoView(APIView):
             if seller_id:
                 seller = get_object_or_404(Employee, id=seller_id)
                 ticket['seller_name'] = seller.assigned_name
-            else:  # Asigna el nombre del organizador
+            else:
                 ticket['seller_name'] = event.organizer.username
 
-        sellers_data = EmployeeSerializer(sellers, many=True).data
-        escaners_data = EmployeeSerializer(escaners, many=True).data
+        return Response({'tickets': tickets_data}, status=status.HTTP_200_OK)
 
-        return Response({
-            'event': event_data,
-            'tickets': tickets_data,
-            'vendedores': sellers_data,
-            'escaners': escaners_data,
-        }, status=status.HTTP_200_OK)
+# GET: Get event sellers -------------------------------------------------------->
+class EventSellersView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        event = get_object_or_404(Event, id=pk, organizer=request.user, is_deleted=False)
+        sellers = Employee.objects.filter(event=event, is_seller=True, is_deleted=False)
+        sellers_data = EmployeeSerializer(sellers, many=True).data
+        return Response({'vendedores': sellers_data}, status=status.HTTP_200_OK)
+
+# GET: Get event scanners ------------------------------------------------------->
+class EventScannersView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        event = get_object_or_404(Event, id=pk, organizer=request.user, is_deleted=False)
+        scanners = Employee.objects.filter(event=event, is_seller=False, is_deleted=False)
+        scanners_data = EmployeeSerializer(scanners, many=True).data
+        return Response({'escaners': scanners_data}, status=status.HTTP_200_OK)
 
 # <--- Ticket ------------------------------------------------------------------------------------------------------------->
 
