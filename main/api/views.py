@@ -81,6 +81,7 @@ class EventTicketsView(APIView):
 
     def get(self, request, pk):
         event = get_object_or_404(Event, id=pk, organizer=request.user, is_deleted=False)
+        event_data = EventSerializer(event).data
         tickets = Ticket.objects.filter(event=event, is_deleted=False)
         tickets_data = TicketSerializer(tickets, many=True).data
 
@@ -92,7 +93,7 @@ class EventTicketsView(APIView):
             else:
                 ticket['seller_name'] = event.organizer.username
 
-        return Response({'tickets': tickets_data}, status=status.HTTP_200_OK)
+        return Response({'event': event_data, 'tickets': tickets_data}, status=status.HTTP_200_OK)
 
 # GET: Get event sellers -------------------------------------------------------->
 class EventSellersView(APIView):
@@ -100,9 +101,10 @@ class EventSellersView(APIView):
 
     def get(self, request, pk):
         event = get_object_or_404(Event, id=pk, organizer=request.user, is_deleted=False)
+        event_data = EventSerializer(event).data
         sellers = Employee.objects.filter(event=event, is_seller=True, is_deleted=False)
         sellers_data = EmployeeSerializer(sellers, many=True).data
-        return Response({'vendedores': sellers_data}, status=status.HTTP_200_OK)
+        return Response({'event': event_data, 'vendedores': sellers_data}, status=status.HTTP_200_OK)
 
 # GET: Get event scanners ------------------------------------------------------->
 class EventScannersView(APIView):
@@ -110,9 +112,10 @@ class EventScannersView(APIView):
 
     def get(self, request, pk):
         event = get_object_or_404(Event, id=pk, organizer=request.user, is_deleted=False)
+        event_data = EventSerializer(event).data
         scanners = Employee.objects.filter(event=event, is_seller=False, is_deleted=False)
         scanners_data = EmployeeSerializer(scanners, many=True).data
-        return Response({'escaners': scanners_data}, status=status.HTTP_200_OK)
+        return Response({'event': event_data, 'escaners': scanners_data}, status=status.HTTP_200_OK)
 
 # <--- Ticket ------------------------------------------------------------------------------------------------------------->
 
