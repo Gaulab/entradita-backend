@@ -17,9 +17,10 @@ urlpatterns = [
     path('events/<int:pk>/', views.EventDetailView.as_view(), name='event-detail'),                    # GET, PUT, DELETE: Manage a specific event
     path('events/', views.EventListView.as_view(), name='event-list'),                                 # GET: List events
     path('events/<int:pk>/details/', views.EventDetailInfoView.as_view(), name='event-detail-info'),   # GET: Get event details
-    path('events/<int:pk>/tickets/', views.EventTicketsView.as_view(), name='event-tickets'),          # GET: Get event tickets
-    path('events/<int:pk>/sellers/', views.EventSellersView.as_view(), name='event-sellers'),          # GET: Get event sellers
-    path('events/<int:pk>/scanners/', views.EventScannersView.as_view(), name='event-scanners'),       # GET: Get event scanners
+    path('events/<int:pk>/employees/', views.EventEmployeesView.as_view(), name='event-employees'),    # GET: Get event employees
+    # path('events/<int:pk>/tickets/', views.EventTicketsView.as_view(), name='event-tickets'),          # GET: Get event tickets
+    # path('events/<int:pk>/sellers/', views.EventSellersView.as_view(), name='event-sellers'),          # GET: Get event sellers
+    # path('events/<int:pk>/scanners/', views.EventScannersView.as_view(), name='event-scanners'),       # GET: Get event scanners
     # endpoints of tickets
     path('tickets/', views.CreateTicketView.as_view(), name='create-ticket'),                          # POST: Create ticket
     path('tickets/<int:pk>/', views.TicketDetailView.as_view(), name='ticket-detail'),                 # GET, PUT, DELETE: Manage a specific ticket

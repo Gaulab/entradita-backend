@@ -2,18 +2,11 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework import generics, permissions
+from rest_framework import permissions
 from django.db import transaction  # Asegúrate de importar transaction
-from ..utils import generate_qr_payload 
-from rest_framework.permissions import IsAuthenticated
-from django.conf import settings
-import hashlib
 from django.shortcuts import get_object_or_404
 from .serializers import EventSerializer, TicketSerializer, EmployeeSerializer, TicketDniSerializer
 from ..models import Event, Ticket, Employee
-import uuid
-import jwt
 
 # <--- Testing ------------------------------------------------------------------------------------------------------------>
 class TestView(APIView):
@@ -71,9 +64,50 @@ class EventDetailInfoView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, pk):
+        # Event
         event = get_object_or_404(Event, id=pk, organizer=request.user, is_deleted=False)
         event_data = EventSerializer(event).data
-        return Response({'event': event_data}, status=status.HTTP_200_OK)
+        
+        # Tickets
+        tickets = Ticket.objects.filter(event=event, is_deleted=False)
+        tickets_data = TicketSerializer(tickets, many=True).data
+
+        for ticket in tickets_data:
+            seller_id = ticket['seller']
+            if seller_id:
+                seller = get_object_or_404(Employee, id=seller_id)
+                ticket['seller_name'] = seller.assigned_name
+            else:
+                ticket['seller_name'] = event.organizer.username
+                
+        # Sellers
+        sellers = Employee.objects.filter(event=event, is_seller=True, is_deleted=False)
+        sellers_data = EmployeeSerializer(sellers, many=True).data
+        
+        # Scanners
+        scanners = Employee.objects.filter(event=event, is_seller=False, is_deleted=False)
+        scanners_data = EmployeeSerializer(scanners, many=True).data
+                
+        return Response({'event': event_data, 'tickets': tickets_data, 'vendedores': sellers_data, 'escaners': scanners_data}, status=status.HTTP_200_OK)
+    
+class EventEmployeesView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        # Event
+        event = get_object_or_404(Event, id=pk, organizer=request.user, is_deleted=False)
+        event_data = EventSerializer(event).data
+                
+        # Sellers
+        sellers = Employee.objects.filter(event=event, is_seller=True, is_deleted=False)
+        sellers_data = EmployeeSerializer(sellers, many=True).data
+        
+        # Scanners
+        scanners = Employee.objects.filter(event=event, is_seller=False, is_deleted=False)
+        scanners_data = EmployeeSerializer(scanners, many=True).data
+                
+        return Response({'event': event_data, 'vendedores': sellers_data, 'escaners': scanners_data}, status=status.HTTP_200_OK)
+    
 
 # GET: Get event tickets -------------------------------------------------------->
 class EventTicketsView(APIView):
@@ -335,15 +369,18 @@ class ScanTicketView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def put(self, request, payload):
-        ticket = get_object_or_404(Ticket, qr_payload=payload, event=request.data.get('event_id', is_deleted=False))  # Get the scanner by UUID and verify they are active
+        ticket = get_object_or_404(Ticket, qr_payload=payload, event=request.data.get('event_id'), is_deleted=False)  # Get the scanner by UUID and verify they are active
         serializer = TicketSerializer(ticket)
 
         if ticket.scanned:  # Verify that the ticket has not been scanned
             return Response({"old_scanned":True, "ticket": serializer.data}, status=status.HTTP_200_OK)
         
-        ticket.scan()  # Scan the ticket
-        scanner = get_object_or_404(Employee, id=request.data.get('scanner_id'), is_seller=False, is_deleted=False)
+        scanner = get_object_or_404(Employee, uuid=request.data.get('scanner_id'), is_seller=False, is_deleted=False)
+        if not scanner:
+            return Response({"message": "Scanner invalido"}, status=status.HTTP_400_BAD_REQUEST)
         scanner.increment_ticket_counter()
+        
+        ticket.scan()  # Scan the ticket
         return Response({"old_scanned":False, "ticket": serializer.data}, status=status.HTTP_200_OK)
     
     
@@ -357,6 +394,11 @@ class ScanTicketDniView(APIView):
 
         if ticket.scanned:  # Verify that the ticket has not been scanned
             return Response({"old_scanned":True, "ticket": serializer.data}, status=status.HTTP_200_OK) 
+        
+        scanner = get_object_or_404(Employee, uuid=request.data.get('scanner_id'), is_seller=False, is_deleted=False)
+        if not scanner:
+            return Response({"message": "Scanner invalido"}, status=status.HTTP_400_BAD_REQUEST)
+        scanner.increment_ticket_counter()
         
         ticket.scan()  # Scan the ticket
         return Response({"old_scanned":False, "ticket": serializer.data}, status=status.HTTP_200_OK)
