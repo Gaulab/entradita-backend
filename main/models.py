@@ -12,6 +12,7 @@ class Event(models.Model):
     date = models.DateField()
     capacity = models.IntegerField(null=True)
     tickets_counter = models.IntegerField(default=0)
+    ticket_sales_enabled = models.BooleanField(default=True)
     image_address = models.CharField(max_length=200, null=True, default="https://photos.fife.usercontent.google.com/pw/AP1GczPK2VYQbObxShlqP0dKWIj0ZqtQm1dJ5diNHN3zd6gxE7Lj8TGiCA5jvg=w813-h813-s-no-gm?authuser=1")
     is_deleted = models.BooleanField(default=False)
     
@@ -20,6 +21,12 @@ class Event(models.Model):
         self.save()
     def decrement_tickets_counter(self):
         self.tickets_counter -= 1
+        self.save()
+    def disable_ticket_sales(self):
+        self.ticket_sales_enabled = False
+        self.save()
+    def enable_ticket_sales(self):
+        self.ticket_sales_enabled = True
         self.save()
     def has_capacity(self):
         return self.capacity is None or self.tickets_counter < self.capacity

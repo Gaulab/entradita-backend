@@ -18,17 +18,12 @@ urlpatterns = [
     path('events/', views.EventListView.as_view(), name='event-list'),                                 # GET: List events
     path('events/<int:pk>/details/', views.EventDetailInfoView.as_view(), name='event-detail-info'),   # GET: Get event details
     path('events/<int:pk>/employees/', views.EventEmployeesView.as_view(), name='event-employees'),    # GET: Get event employees
-    # path('events/<int:pk>/tickets/', views.EventTicketsView.as_view(), name='event-tickets'),          # GET: Get event tickets
-    # path('events/<int:pk>/sellers/', views.EventSellersView.as_view(), name='event-sellers'),          # GET: Get event sellers
-    # path('events/<int:pk>/scanners/', views.EventScannersView.as_view(), name='event-scanners'),       # GET: Get event scanners
     # endpoints of tickets
     path('tickets/', views.CreateTicketView.as_view(), name='create-ticket'),                          # POST: Create ticket
-    path('tickets/<int:pk>/', views.TicketDetailView.as_view(), name='ticket-detail'),                 # GET, PUT, DELETE: Manage a specific ticket
-    path('events/<int:pk>/tickets/', views.TicketListView.as_view(), name='ticket-list'),              # GET: List tickets of an event
+    path('tickets/<int:pk>/', views.TicketDetailView.as_view(), name='ticket-detail'),                 # DELETE: Manage a specific ticket
     # endpoints of employees
     path('employees/', views.CreateEmpleadoView.as_view(), name='create-employee'),                    # POST: Create employee
-    path('employees/<int:pk>/', views.EmpleadoDetailView.as_view(), name='empleado-detail'),           # GET, PUT, DELETE: Manage a specific empleado
-    path('events/<int:pk>/employees/', views.EmpleadoListView.as_view(), name='employee-list'),        # GET: List empleados of an event
+    path('employees/<int:pk>/', views.EmpleadoDetailView.as_view(), name='empleado-detail'),           # PUT, DELETE: Manage a specific employee
     
     # Public endpoints ------------------------------------------------------------------------------------------>
     # endpoints of sellers
@@ -45,13 +40,3 @@ urlpatterns = [
     path('events/<str:pk>/check-password/', views.CheckEventPasswordView.as_view(), name='check_event_password'), # POST: Check event password
     
 ]
-
-# Description: Urls of the api
-# Endpoints:
-#   - Private endpoints:
-#       - Test view
-#       - Token obtain pair view
-#       - Token refresh view
-#       - Create event view
-#       - Event detail view
-#       - Event list view
