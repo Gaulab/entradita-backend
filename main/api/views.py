@@ -227,6 +227,8 @@ class SellerCreateTicketView(APIView):
 
     def post(self, request, uuid):
         employee = get_object_or_404(Employee, uuid=uuid, is_seller=True, status=True)  # Get the employee by UUID and verify they are a seller with status True
+        if not employee.event.dni_required:
+            request.data['owner_dni'] = ""
         
         # Verify that the event has capacity
         event = employee.event

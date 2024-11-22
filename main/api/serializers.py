@@ -3,6 +3,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from ..models import Event, Ticket, Employee
 from ..utils import generate_qr_payload 
+from datetime import datetime
 
 class EventSerializer(serializers.ModelSerializer):
     class Meta:
@@ -24,7 +25,8 @@ class TicketSerializer(serializers.ModelSerializer):
         owner_name = validated_data.get('owner_name')
         owner_lastname = validated_data.get('owner_lastname')
         owner_dni = validated_data.get('owner_dni')
-        validated_data['qr_payload'] = generate_qr_payload(owner_name, owner_lastname, owner_dni)
+        timestamp = datetime.now().isoformat()
+        validated_data['qr_payload'] = generate_qr_payload(owner_name, owner_lastname, owner_dni, timestamp)
         return super().create(validated_data)
     
 class TicketDniSerializer(serializers.ModelSerializer):

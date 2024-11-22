@@ -8,8 +8,10 @@ class TicketTag(models.Model):
     event = models.ForeignKey('Event', on_delete=models.CASCADE, related_name='ticket_tags')                      # 1
     name = models.CharField(max_length=100)                                                                       # 2
     max_tickets = models.IntegerField(null=True, blank=True)                                                      # 3
-    def __str__(self):                                                                                            # 4
+    price = models.FloatField(null=True, blank=True)                                                              # 4
+    def __str__(self):                                                                                            # 5
         return f"{self.name} (Event: {self.event.name})"
+
 # EVENT >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 class Event(models.Model):
     id = models.AutoField(primary_key=True)                                                                       # 1 - PK
@@ -18,7 +20,7 @@ class Event(models.Model):
     password_employee = models.CharField(max_length=25)                                                          # 4
     place = models.CharField(max_length=25)                                                                      # 5
     date = models.DateField()                                                                                     # 6
-    capacity = models.IntegerField(null=True)                                                                     # 7
+    capacity = models.PositiveIntegerField(null=True)                                                                     # 7
     tickets_counter = models.IntegerField(default=0)                                                              # 8
     ticket_sales_enabled = models.BooleanField(default=True)                                                      # 9 - NEW
     image_address = models.CharField(max_length=500, null=True)                                                   # 10
@@ -51,6 +53,7 @@ class Event(models.Model):
     def get_tickets_tags(self):                                                                                   # 20
         return self.tags.all()
 
+
 # EMPLOYEE >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 class Employee(models.Model):
     id = models.AutoField(primary_key=True)                                                                       # 1 - PK
@@ -80,6 +83,7 @@ class Employee(models.Model):
         for ticket in self.tickets_created.all():
             ticket.soft_delete()
         
+        
 # TICKET >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 class Ticket(models.Model):
     id = models.AutoField(primary_key=True)                                                                       # 1 - PK
@@ -87,7 +91,7 @@ class Ticket(models.Model):
     seller = models.ForeignKey(Employee, on_delete=models.CASCADE, null=True, related_name='tickets_created')     # 3 - FK
     owner_name = models.CharField(max_length=100)                                                                 # 4
     owner_lastname = models.CharField(max_length=100)                                                             # 5
-    owner_dni = models.CharField(max_length=10)                                                                   # 6
+    owner_dni = models.CharField(max_length=8, null=True)                                                                   # 6
     qr_payload = models.CharField(max_length=64)                                                                  # 7
     scanned = models.BooleanField(default=False)                                                                  # 8
     uuid = models.CharField(max_length=36, unique=True, default=uuid.uuid4)                                       # 9
