@@ -8,23 +8,27 @@ from rest_framework_simplejwt.views import (
 
 urlpatterns = [
     
-    # Private endpoints ------------------------------------------------------------------------------------------>
-    path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),  # POST: Obtener token
-    # endpoints of test
-    path('test/', views.TestView.as_view(), name='info'),                                              # GET: Test view
-    # endpoints of events
-    path('events/create/', views.CreateEventView.as_view(), name='event-create'),                      # POST: Create event
-    path('events/<int:pk>/', views.EventDetailView.as_view(), name='event-detail'),                    # GET, PUT, DELETE: Manage a specific event
-    path('events/', views.EventListView.as_view(), name='event-list'),                                 # GET: List events
-    path('events/<int:pk>/details/', views.EventDetailInfoView.as_view(), name='event-detail-info'),   # GET: Get event details
-    path('events/<int:pk>/employees/', views.EventEmployeesView.as_view(), name='event-employees'),    # GET: Get event employees
+    # Private endpoints >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),                                                            # 01
+    # Test endpoint - Punto de conexión de prueba
+    path('test/', views.TestView.as_view(), name='info'),                                                                               # 02
+    # Event endpoint from an organizer - Punto de conexión para evento desde un organizador
+    path('event/create/', views.CreateEventView.as_view(), name='event-create'),                                                        # 03
+    path('event/<int:pk>/', views.EventDetailView.as_view(), name='event-detail'),                                                      # 04
+    path('event/<int:pk>/ticket-sales/', views.UpdateTicketSalesEventView.as_view(), name='event-ticket-sales-update'),                 # 05
+    path('events/', views.EventListView.as_view(), name='event-list'),                                                                  # 06
+    path('event/<int:pk>/details/', views.EventDetailInfoView.as_view(), name='event-detail-info'),                                    # 07
+
+    path('events/<int:pk>/employees/', views.EventEmployeesView.as_view(), name='event-employees'),                                     # GET: Get event employees >>>>> SE USA???
+    
+    # endpoints of employees
+    path('employee/', views.EmployeeCreateView.as_view(), name='create-employee'),                                                     # 09
+    path('employee/<int:pk>/status/', views.EmployeeStatusView.as_view(), name='employee-status'),                                     # 10
+    path('employee/<int:pk>/', views.EmpleadoDetailView.as_view(), name='empleado-detail'),                                            # PUT, DELETE: Manage a specific employee
+    
     # endpoints of tickets
     path('tickets/', views.CreateTicketView.as_view(), name='create-ticket'),                          # POST: Create ticket
     path('tickets/<int:pk>/', views.TicketDetailView.as_view(), name='ticket-detail'),                 # DELETE: Manage a specific ticket
-    # endpoints of employees
-    path('employees/', views.CreateEmpleadoView.as_view(), name='create-employee'),                    # POST: Create employee
-    path('employees/<int:pk>/', views.EmpleadoDetailView.as_view(), name='empleado-detail'),           # PUT, DELETE: Manage a specific employee
-    
     # Public endpoints ------------------------------------------------------------------------------------------>
     # endpoints of sellers
     path('employees/seller/<str:uuid>/info/', views.SellerInfoView.as_view(), name='seller-info'),     # GET: Get vendedor info and validate
@@ -40,3 +44,9 @@ urlpatterns = [
     path('events/<str:pk>/check-password/', views.CheckEventPasswordView.as_view(), name='check_event_password'), # POST: Check event password
     
 ]
+
+
+# DOCS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# 01: Token endpoint - Punto de conexión de token
+# 02: Test endpoint - Punto de conexión de prueba para verificar que el servidor esta corriendo
+# 03: Event endpoint from an organizer - Punto de conexión para evento desde un organizador, aqui se crean los tickets tag tambien correspondientes al evento

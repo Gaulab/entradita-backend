@@ -1,19 +1,9 @@
 # entraditaBack/main/api/serializers.py
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from ..models import Event, Ticket, Employee
+from ..models import Event, Ticket, Employee, TicketTag
 from ..utils import generate_qr_payload 
 from datetime import datetime
-
-class EventSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Event
-        fields = '__all__'
-        read_only_fields = ['organizer']  # Hacer que el campo organizer sea de solo lectura
-    
-    def create(self, validated_data):
-        validated_data['organizer'] = self.context['request'].user
-        return super().create(validated_data)
 
 class TicketSerializer(serializers.ModelSerializer):
     class Meta:
@@ -38,4 +28,17 @@ class EmployeeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Employee
         fields = '__all__'
-        
+
+
+class TicketTagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TicketTag
+        fields = '__all__'
+        read_only_fields = ['event']  # El evento se asignará automáticamente
+
+class EventSerializer(serializers.ModelSerializer):
+    ticket_tags = TicketTagSerializer(many=True, read_only=True)  # Solo lectura
+    class Meta:
+        model = Event
+        fields = '__all__'
+        read_only_fields = ['organizer']

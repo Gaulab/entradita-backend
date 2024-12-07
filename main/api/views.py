@@ -5,8 +5,8 @@ from rest_framework.views import APIView
 from rest_framework import permissions
 from django.db import transaction  # Asegúrate de importar transaction
 from django.shortcuts import get_object_or_404
-from .serializers import EventSerializer, TicketSerializer, EmployeeSerializer, TicketDniSerializer
-from ..models import Event, Ticket, Employee
+from .serializers import EventSerializer, TicketSerializer, EmployeeSerializer, TicketDniSerializer, TicketTagSerializer
+from ..models import Event, Ticket, Employee, TicketTag
 
 # <--- Testing ------------------------------------------------------------------------------------------------------------>
 class TestView(APIView):
@@ -16,58 +16,117 @@ class TestView(APIView):
 
 # <--- Event -------------------------------------------------------------------------------------------------------------->
 
-# POST: Create event
+# POST: Create Event with TicketTags --------------------------------------------->
 class CreateEventView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        serializer = EventSerializer(data=request.data, context={'request': request})
+        data = request.data
+        ticket_tags_data = data.pop('ticket_tags', [])
+
+        # Crear el evento
+        serializer = EventSerializer(data=data, context={'request': request})
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            event = serializer.save(organizer=request.user)  # Asignar organizer al guardar
+
+            # Crear los TicketTags asociados al evento
+            for tag_data in ticket_tags_data:
+                TicketTag.objects.create(event=event, **tag_data)
+
+            # Preparar la respuesta
+            response_data = EventSerializer(event).data
+            return Response({
+                "message": "Evento y TicketTags creados correctamente.",
+                "event": response_data,
+            }, status=status.HTTP_201_CREATED)
+        
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 # GET, PUT, DELETE: Manage a specific event --------------------------------------->
 class EventDetailView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, pk):
-        event = get_object_or_404(Event, pk=pk, organizer=request.user, is_deleted = False)
-        serializer = EventSerializer(event)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        try:
+            event = Event.objects.get(pk=pk, organizer=request.user, is_deleted=False)
+        except Event.DoesNotExist:
+            return Response({"detail": "Evento no encontrado o eliminado."}, status=status.HTTP_404_NOT_FOUND)
+        event_data = EventSerializer(event).data
+        ticket_tags = TicketTagSerializer(event.ticket_tags.filter(is_deleted=False), many=True).data
+        event_data['ticket_tags'] = ticket_tags
+        return Response(event_data, status=status.HTTP_200_OK)
 
-    def put(self, request, pk):
-        event = get_object_or_404(Event, pk = pk, organizer = request.user, is_deleted = False)
-        serializer = EventSerializer(event, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    def patch(self, request, pk):
-        event = get_object_or_404(Event, pk=pk, organizer=request.user, is_deleted = False)
-        if event.ticket_sales_enabled:
-            event.disable_ticket_sales()
-            bool = False
-        else:
-            event.enable_ticket_sales()
-            bool = True
-        return Response({'ticket_sales_enabled': bool}, status=status.HTTP_200_OK)
+    def put(self, request, pk, *args, **kwargs):
+        try:
+            event = Event.objects.get(pk=pk, organizer=request.user, is_deleted=False)
+        except Event.DoesNotExist:
+            return Response({"detail": "Evento no encontrado o eliminado."}, status=status.HTTP_404_NOT_FOUND)
+        data = request.data
+        # Actualizar los campos básicos del evento
+        for attr, value in data.items():
+            if attr != 'ticket_tags':
+                setattr(event, attr, value)
+        # Manejo de ticket_tags
+        if 'ticket_tags' in data:
+            ticket_tags_data = data['ticket_tags']
+            ticket_tags_ids = {tag.get('id') for tag in ticket_tags_data if tag.get('id')}
+            current_tag_ids = set(tag.id for tag in event.ticket_tags.filter(is_deleted=False))
+            current_tag_names = {tag.name for tag in event.ticket_tags.filter(is_deleted=False)}
+            # Identificar tags a agregar y actualizar
+            to_add = [tag for tag in ticket_tags_data if not tag.get('id') and tag['name'] not in current_tag_names]
+            to_update = [tag for tag in ticket_tags_data if tag.get('id') in current_tag_ids]
+            to_soft_delete = current_tag_ids - ticket_tags_ids
+            # Crear nuevos TicketTags
+            for tag_data in to_add:
+                TicketTag.objects.create(event=event, **tag_data)
+            # Actualizar TicketTags existentes
+            for tag_data in to_update:
+                tag = TicketTag.objects.get(id=tag_data['id'], event=event)
+                tag.name = tag_data['name']
+                tag.price = tag_data['price']
+                tag.save()
+            # Marcar como eliminados los TicketTags que ya no están en la lista
+            for tag in event.ticket_tags.filter(id__in=to_soft_delete):
+                tag.soft_delete()
+        event.save()
+        return Response(EventSerializer(event).data, status=status.HTTP_200_OK)
 
     def delete(self, request, pk):
-        event = get_object_or_404(Event, pk = pk, organizer = request.user, is_deleted = False)
+        try:
+            event = Event.objects.get(pk=pk, organizer=request.user, is_deleted=False)
+        except Event.DoesNotExist:
+            return Response({"detail": "Evento no encontrado o eliminado."}, status=status.HTTP_404_NOT_FOUND)
+
         event.soft_delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+# PUT: Update event ticket sales ------------------------------------------------->
+class UpdateTicketSalesEventView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request, pk):
+        event = get_object_or_404(Event, pk=pk, organizer=request.user, is_deleted=False)
+        if event.ticket_sales_enabled:
+            event.disable_ticket_sales()
+            ticket_sales_status = False
+        else:
+            event.enable_ticket_sales()
+            ticket_sales_status = True
+        return Response({'ticket_sales_enabled': ticket_sales_status}, status=status.HTTP_200_OK)
 
 # GET: List events ---------------------------------------------------------------->
 class EventListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
-
+    
     def get(self, request):
-        events = Event.objects.filter(organizer = request.user, is_deleted = False)
-        serializer = EventSerializer(events, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
+        events = Event.objects.filter(organizer=request.user, is_deleted=False)
+        event_data = []
+        for event in events:
+            data = EventSerializer(event).data
+            data.pop('ticket_tags', None)  # Remove the ticket_tags field
+            event_data.append(data)
+        return Response(event_data, status=status.HTTP_200_OK)
 
 # GET: Get event details -------------------------------------------------------->
 class EventDetailInfoView(APIView):
@@ -77,6 +136,8 @@ class EventDetailInfoView(APIView):
         # Event
         event = get_object_or_404(Event, id=pk, organizer=request.user, is_deleted=False)
         event_data = EventSerializer(event).data
+        ticket_tags = TicketTagSerializer(event.ticket_tags.filter(is_deleted=False), many=True).data
+        event_data['ticket_tags'] = ticket_tags
         
         # Tickets
         tickets = Ticket.objects.filter(event=event, is_deleted=False)
@@ -91,7 +152,7 @@ class EventDetailInfoView(APIView):
             else:
                 ticket['seller_name'] = event.organizer.username
                 
-            if ticket['scanned']:
+            if ticket['scanned']: # para el progress bar de tickets escaneados
                 tickets_scanned += 1
         event_data['tickets_scanned'] = tickets_scanned
                 
@@ -131,7 +192,7 @@ class CreateTicketView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        serializer = TicketSerializer(data=request.data, context={'request': request})
+        serializer = TicketSerializer(data = request.data, context={'request': request})
         if serializer.is_valid():
             ticket = serializer.save()  # No asignar el campo seller debido a que en esta vista lo crea el organizer
             if not ticket.event.ticket_sales_enabled:
@@ -141,7 +202,7 @@ class CreateTicketView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-# GET, PUT, DELETE: Manage a specific ticket -------------------------------------->
+# GET, PUT, DELETE: Manage a specific ticket ------------------------------------------------------------------------------>
 class TicketDetailView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -154,50 +215,85 @@ class TicketDetailView(APIView):
 # <--- Employees ---------------------------------------------------------------------------------------------------------->
 
 # POST: Create employee ----------------------------------------------------------->
-class CreateEmpleadoView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+class EmployeeCreateView(APIView):
+    
+    def post(self, request):
+        data = request.data
+        print("Datos recibidos:", data)
 
-    def post(self, request, *args, **kwargs):
-        serializer = EmployeeSerializer(data=request.data, context={'request': request})
+        # Obtener el evento
+        try:
+            event = Event.objects.get(id=data['event'], is_deleted=False)
+        except Event.DoesNotExist:
+            return Response({"error": "El evento no existe o está eliminado."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Extraer IDs de TicketTags y validar
+        ticket_tags_ids = [tag['id'] for tag in data.get('ticket_tags', [])]
+        print("IDs de TicketTags extraídos:", ticket_tags_ids)
+
+        ticket_tags = TicketTag.objects.filter(id__in=ticket_tags_ids, event=event, is_deleted=False)
+        if len(ticket_tags) != len(ticket_tags_ids):
+            return Response({"error": "Uno o más TicketTags no están asociados a este evento."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Actualizar data con solo IDs de TicketTags
+        data['ticket_tags'] = ticket_tags_ids
+
+        # Crear el empleado
+        serializer = EmployeeSerializer(data=data)
         if serializer.is_valid():
-            serializer.save()
+            employee = serializer.save()
+            print("Empleado creado con éxito:", employee)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # GET, PUT, DELETE: Manage a specific employee ------------------------------------>
+
+# PATCH: Enable or disable employee ------------------------------------------------->
+class EmployeeStatusView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request, pk):
+        empleado = get_object_or_404(Employee, id=pk, event__organizer=request.user, is_deleted=False)
+        if empleado.status == True:
+            empleado.disable()
+        else:
+            empleado.enable()
+        return Response({'status': empleado.status}, status=status.HTTP_200_OK)
+
+
 class EmpleadoDetailView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def put(self, request, pk):
-        empleado = get_object_or_404(Employee, pk=pk, event__organizer=request.user, is_deleted=False)
-        serializer = EmployeeSerializer(empleado, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, pk):
+    def get(self, request, pk):
         empleado = get_object_or_404(Employee, id=pk, event__organizer=request.user, is_deleted=False)
+        serializer_employee = EmployeeSerializer(empleado)
+        ticket_tags = empleado.get_ticket_tags()
+        serializer_ticket_tags = TicketTagSerializer(ticket_tags, many=True)
+        return Response({'employee': serializer_employee.data, 'ticket_tags': serializer_ticket_tags.data}, status=status.HTTP_200_OK)
         
-        if empleado.status == True:
-            # Deshabilitar al empleado
-            empleado.disable()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            # Usar una transacción para asegurar que todas las operaciones se realicen correctamente
-            with transaction.atomic():
-                # Obtener el evento del empleado y contar sus tickets activos
-                event = empleado.event
-                tickets_count = empleado.tickets_created.filter(is_deleted=False).count()
-                
-                # Decrementar el contador de tickets del evento en función de los tickets del empleado
-                event.tickets_counter -= tickets_count
-                event.save()
-                
-                # Realizar la eliminación lógica en el empleado y sus tickets asociados
-                empleado.soft_delete()
-
-            return Response(status=status.HTTP_204_NO_CONTENT)
+    def put(self, request, pk):
+        employee = get_object_or_404(Employee, id=pk, event__organizer=request.user, is_deleted=False)
+        data = request.data
+        # Update assigned_name if provided
+        if 'assigned_name' in data:
+            employee.assigned_name = data['assigned_name']
+        if 'seller_capacity' in data:
+            employee.seller_capacity = data['seller_capacity']
+        # Update ticket_tags if provided
+        if 'ticket_tags' in data:
+            ticket_tags_data = data['ticket_tags']
+            ticket_tags = TicketTag.objects.filter(id__in=ticket_tags_data, event=employee.event, is_deleted=False)
+            if len(ticket_tags) != len(ticket_tags_data):
+                return Response({"error": "Uno o más TicketTags no están asociados a este evento."}, status=status.HTTP_400_BAD_REQUEST)
+            employee.ticket_tags.set(ticket_tags) # Esto ya actualiza la relación ManyToMany en la base de datos, borrando las relaciones anteriores
+        employee.save()
+        return Response(EmployeeSerializer(employee).data, status=status.HTTP_200_OK)
+    
+    def delete(self, request, pk):
+        employee = get_object_or_404(Employee, id=pk, event__organizer=request.user, is_deleted=False)
+        employee.soft_delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 # <--- public views - Sellers --------------------------------------------------------------------------------------------->
 

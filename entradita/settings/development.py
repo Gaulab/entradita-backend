@@ -5,7 +5,7 @@ from .base import *
 # Debug activado para desarrollo
 DEBUG = True
 # Hosts permitidos en desarrollo
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['*']
 # Base de datos local
 DATABASES = {
     'default': {
