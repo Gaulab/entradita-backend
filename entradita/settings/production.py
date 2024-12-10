@@ -15,8 +15,8 @@ DATABASES = {
 # Orígenes de CORS específicos para producción
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
-    "https://www.entradita.com",
+    "https://www.entradita-frontend-git-develop-aguilarzzs-projects.vercel.app",
 ]
 
 # CSRF Trusted Origins
-CSRF_TRUSTED_ORIGINS = ['https://entraditaback-production.up.railway.app']
+CSRF_TRUSTED_ORIGINS = ['https://entraditaback-develop.up.railway.app']
