@@ -2,12 +2,15 @@
 
 from .base import *
 import dj_database_url
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 # Debug desactivado para producción
 DEBUG = False
 
 # Hosts permitidos en producción
-ALLOWED_HOSTS = ['entraditaback-production.up.railway.app']
+ALLOWED_HOSTS = ['entraditaback-develop.up.railway.app']
 # Base de datos de producción (URL en variable de entorno)
 DATABASES = {
     'default': dj_database_url.config(default=os.getenv('DATABASE_URL'))

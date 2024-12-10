@@ -14,6 +14,7 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # General settings
 SECRET_KEY = config('SECRET_KEY', default='your-default-secret-key')
+
 # Aplicaciones
 INSTALLED_APPS = [
     'django.contrib.admin',
