@@ -15,8 +15,9 @@ class TicketSerializer(serializers.ModelSerializer):
         owner_name = validated_data.get('owner_name')
         owner_lastname = validated_data.get('owner_lastname')
         owner_dni = validated_data.get('owner_dni')
+        ticket_tag = validated_data.get('ticket_tag')
         timestamp = datetime.now().isoformat()
-        validated_data['qr_payload'] = generate_qr_payload(owner_name, owner_lastname, owner_dni, timestamp)
+        validated_data['qr_payload'] = generate_qr_payload(owner_name, owner_lastname, owner_dni , timestamp)
         return super().create(validated_data)
     
 class TicketDniSerializer(serializers.ModelSerializer):

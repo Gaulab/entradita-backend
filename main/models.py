@@ -99,7 +99,7 @@ class Employee(models.Model):
     def __str__(self):                                                                                            # 17
         return self.assigned_name
     def get_ticket_tags(self):
-        return self.ticket_tags.filter(is_deleted=False)
+        return self.ticket_tags.filter(is_deleted=False).values()
 # TICKET >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 class Ticket(models.Model):
     id = models.AutoField(primary_key=True)                                                                       # 01 - PK
