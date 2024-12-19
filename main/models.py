@@ -2,8 +2,51 @@
 from django.db import models
 from django.conf import settings
 import uuid
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.db.models import JSONField
 
 
+
+class EventPage(models.Model):
+    id = models.AutoField(primary_key=True)                                                                       # 01 - PK
+    event = models.OneToOneField('Event', on_delete=models.CASCADE, related_name='event_page')                    # 02 - One-to-One
+    # Generals
+    image_background = models.CharField(max_length=500, null=True)                                                 # 05
+    font_address = models.CharField(max_length=500, null=True)                                                     # 06 
+    font_color = models.CharField(max_length=7, default='#000000')                                                 # 06
+    # Title block
+    title = models.CharField(max_length=50)                                                                       # 03
+    # Text block
+    text = models.TextField(max_length=500)
+    # Image block
+    image_front = models.CharField(max_length=500, null=True)
+    # Countdown block
+    contdown_date = models.DateTimeField(null=True)                                                               # 07
+    # Button block
+    button_text = models.CharField(max_length=25, null=True)                                                       # 08
+    button_link = models.CharField(max_length=500, null=True)                                                      # 09
+    # Contact whatsapp block
+    button_whatsapp = models.CharField(max_length=500, null=True)                                                  # 10
+    # Map block
+    map_address = models.CharField(max_length=500, null=True)                                                      # 11
+    # Buy block
+    text_buy = models.TextField(max_length=500, null=True)                                                         # 14
+    cbu = models.CharField(max_length=22, null=True)                                                               # 12
+    alias = models.CharField(max_length=50, null=True)                                                             # 13
+    # Order blocks
+    block_order = JSONField(default=list)
+    # is deleted
+    is_deleted = models.BooleanField(default=False)                                                                # 11
+
+    def __str__(self):                                                                                            
+        return self.title
+
+    def soft_delete(self):                                                                                        
+        self.is_deleted = True
+        self.save()
+
+    
 # EVENT >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 class Event(models.Model):
     id = models.AutoField(primary_key=True)                                                                       # 01 - PK
@@ -123,79 +166,9 @@ class Ticket(models.Model):
     def __str__(self):                                                                                            # 14
         return f"{self.owner_name} {self.owner_lastname} (Event: {self.event.name})"
 
-# DOCS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    
-    # docs TicketTag -------------------------------------------------------------------------------------------------------------------
-    # Attributes: 
-    # 1 - Clave primaria
-    # 2 - Relación con el evento, para saber a qué evento pertenece la categoría
-    # 3 - Nombre de la categoría de tickets (por ejemplo, "General", "VIP", "Platinum")
-    # 4 - Número máximo de tickets que se pueden vender con esta categoría. Si es None, no hay límite, pensado a futuro, sin uso actual.
-    # 5 - Precio de la categoría de tickets
-    # 6 - Indica si la categoría de tickets fue eliminada
-    # Methods:
-    # 7 - Método __str__ para representar la categoría de tickets como un string    
-    # 8 - Método para eliminar la categoría de tickets
 
-    # docs Event -----------------------------------------------------------------------------------------------------------------------
-    # Attributes: 
-    # 1 - Clave primaria
-    # 2 - Relación con el organizador del evento
-    # 3 - Nombre del evento
-    # 4 - Contraseña para los empleados del evento
-    # 5 - Dirección de la imagen del evento
-    # 6 - Lugar del evento
-    # 7 - Fecha del evento
-    # 8 - Indica si se requiere DNI para comprar tickets
-    # 9 - Capacidad máxima de tickets que se pueden vender para el evento
-    # 10 - Contador de tickets vendidos
-    # 11 - Indica si las ventas de tickets están habilitadas
-    # 12 - Indica si el evento fue eliminado
-    # Methods:
-    # 13 - Incrementa el contador de tickets vendidos
-    # 14 - Decrementa el contador de tickets vendidos
-    # 15 - Deshabilita las ventas de tickets
-    # 16 - Habilita las ventas de tickets
-    # 17 - Indica si el evento tiene capacidad para vender más tickets
-    # 18 - Devuelve los empleados del evento
-    # 19 - Elimina el evento y sus empleados y tickets asociados
-    # 20 - Devuelve las categorías de tickets del evento
 
-    # docs Employee --------------------------------------------------------------------------------------------------------------------
-    # Attributes:
-    # 1 - Clave primaria
-    # 2 - Relación con el evento al que pertenece el empleado
-    # 3 - Nombre asignado al empleado
-    # 4 - Indica si el empleado es vendedor
-    # 5 - Capacidad máxima de tickets que puede vender el empleado
-    # 6 - Contador de tickets vendidos por el empleado
-    # 7 - UUID del empleado
-    # 8 - Indica si el empleado está activo
-    # 9 - Categorías de tickets que el empleado puede vender
-    # 10 - Indica si el empleado fue eliminado
-    # Methods:
-    # 11 - Deshabilita al empleado
-    # 12 - Habilita al empleado
-    # 13 - Indica si el empleado tiene capacidad para vender más tickets
-    # 14 - Incrementa el contador de tickets vendidos por el empleado
-    # 15 - Decrementa el contador de tickets vendidos por el empleado
-    # 16 - Elimina al empleado y sus tickets asociados
-
-    # docs Ticket ----------------------------------------------------------------------------------------------------------------------
-    # Attributes:
-    # 1 - Clave primaria
-    # 2 - Relación con el evento al que pertenece el ticket
-    # 3 - Relación con el empleado que vendió el ticket
-    # 4 - Categoría de ticket
-    # 5 - Nombre del dueño del ticket
-    # 6 - Apellido del dueño del ticket
-    # 7 - DNI del dueño del ticket
-    # 8 - Payload del código QR del ticket
-    # 9 - Indica si el ticket fue escaneado
-    # 10 - UUID del ticket
-    # 11 - Indica si el ticket fue eliminado
-    # Methods:
-    # 12 - Marca el ticket como escaneado
-    # 13 - Elimina el ticket
-
-# END OF DOCS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+@receiver(post_save, sender=Event)
+def create_event_page(sender, instance, created, **kwargs):
+    if created:
+        EventPage.objects.create(event=instance)

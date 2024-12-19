@@ -21,7 +21,8 @@ urlpatterns = [
     path('event/<int:pk>/economic-report/', views.EventEconomicReportView.as_view(), name='event-economic-report'),                   # 08
 
     path('events/<int:pk>/employees/', views.EventEmployeesView.as_view(), name='event-employees'),                                     # GET: Get event employees >>>>> SE USA???
-    
+    path('event/<int:pk>/page/', views.EventPageDetailView.as_view(), name='event-page'),                                                     # GET: Get event page
+
     # endpoints of employees
     path('employee/', views.EmployeeCreateView.as_view(), name='create-employee'),                                                     # 09
     path('employee/<int:pk>/status/', views.EmployeeStatusView.as_view(), name='employee-status'),                                     # 10
@@ -46,11 +47,5 @@ urlpatterns = [
     path('events/<str:pk>/check-password/', views.CheckEventPasswordView.as_view(), name='check_event_password'), # POST: Check event password
     path('event/<int:pk>/info-for-web/', views.InfoForWebView.as_view(), name='info-for-web'),                        # GET: Get info for web
 
-    
 ]
 
-
-# DOCS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-# 01: Token endpoint - Punto de conexión de token
-# 02: Test endpoint - Punto de conexión de prueba para verificar que el servidor esta corriendo
-# 03: Event endpoint from an organizer - Punto de conexión para evento desde un organizador, aqui se crean los tickets tag tambien correspondientes al evento
