@@ -1,52 +1,12 @@
 # entraditaBack/main/models.py
-from django.db import models
-from django.conf import settings
-import uuid
 from django.db.models.signals import post_save
-from django.dispatch import receiver
 from django.db.models import JSONField
+from eventpage.models import EventPage
+from django.dispatch import receiver
+from django.conf import settings
+from django.db import models
+import uuid
 
-
-
-class EventPage(models.Model):
-    id = models.AutoField(primary_key=True)                                                                       # 01 - PK
-    event = models.OneToOneField('Event', on_delete=models.CASCADE, related_name='event_page')                    # 02 - One-to-One
-    # Generals
-    image_background = models.CharField(max_length=500, null=True)                                                 # 05
-    font_address = models.CharField(max_length=500, null=True)                                                     # 06 
-    font_color = models.CharField(max_length=7, default='#000000')                                                 # 06
-    # Title block
-    title = models.CharField(max_length=50)                                                                       # 03
-    # Text block
-    text = models.TextField(max_length=500)
-    # Image block
-    image_front = models.CharField(max_length=500, null=True)
-    # Countdown block
-    contdown_date = models.DateTimeField(null=True)                                                               # 07
-    # Button block
-    button_text = models.CharField(max_length=25, null=True)                                                       # 08
-    button_link = models.CharField(max_length=500, null=True)                                                      # 09
-    # Contact whatsapp block
-    button_whatsapp = models.CharField(max_length=500, null=True)                                                  # 10
-    # Map block
-    map_address = models.CharField(max_length=500, null=True)                                                      # 11
-    # Buy block
-    text_buy = models.TextField(max_length=500, null=True)                                                         # 14
-    cbu = models.CharField(max_length=22, null=True)                                                               # 12
-    alias = models.CharField(max_length=50, null=True)                                                             # 13
-    # Order blocks
-    block_order = JSONField(default=list)
-    # is deleted
-    is_deleted = models.BooleanField(default=False)                                                                # 11
-
-    def __str__(self):                                                                                            
-        return self.title
-
-    def soft_delete(self):                                                                                        
-        self.is_deleted = True
-        self.save()
-
-    
 # EVENT >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 class Event(models.Model):
     id = models.AutoField(primary_key=True)                                                                       # 01 - PK
@@ -167,7 +127,7 @@ class Ticket(models.Model):
         return f"{self.owner_name} {self.owner_lastname} (Event: {self.event.name})"
 
 
-
+# Señal para crear la página del evento automáticamente
 @receiver(post_save, sender=Event)
 def create_event_page(sender, instance, created, **kwargs):
     if created:

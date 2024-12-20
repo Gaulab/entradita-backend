@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'authapp',
     'main',
+    'eventpage',
     'django_extensions'
 ]
 # Middlewares

@@ -21,7 +21,6 @@ urlpatterns = [
     path('event/<int:pk>/economic-report/', views.EventEconomicReportView.as_view(), name='event-economic-report'),                   # 08
 
     path('events/<int:pk>/employees/', views.EventEmployeesView.as_view(), name='event-employees'),                                     # GET: Get event employees >>>>> SE USA???
-    path('event/<int:pk>/page/', views.EventPageDetailView.as_view(), name='event-page'),                                                     # GET: Get event page
 
     # endpoints of employees
     path('employee/', views.EmployeeCreateView.as_view(), name='create-employee'),                                                     # 09

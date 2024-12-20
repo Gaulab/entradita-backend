@@ -5,8 +5,8 @@ from rest_framework.views import APIView
 from rest_framework import permissions
 from django.db import transaction  # Asegúrate de importar transaction
 from django.shortcuts import get_object_or_404
-from .serializers import EventPageSerializer, EventSerializer, TicketSerializer, EmployeeSerializer, TicketDniSerializer, TicketTagSerializer
-from ..models import Event, EventPage, Ticket, Employee, TicketTag
+from .serializers import EventSerializer, TicketSerializer, EmployeeSerializer, TicketDniSerializer, TicketTagSerializer
+from ..models import Event, Ticket, Employee, TicketTag
 
 # <--- Testing ------------------------------------------------------------------------------------------------------------>
 class TestView(APIView):
@@ -540,42 +540,3 @@ class CheckEventPasswordView(APIView):
         else:
             return Response({"error": "Password is incorrect."}, status=status.HTTP_400_BAD_REQUEST)
         
-
-# <--- Event Page --------------------------------------------------------------------------------------------------------->
-
-
-# Retrieve, Update, and Delete Event Pages
-class EventPageDetailView(APIView):
-    def get_object(self, id):
-        try:
-            return EventPage.objects.get(id=id, is_deleted=False)
-        except EventPage.DoesNotExist:
-            return None
-
-    def get(self, request, pk):
-        event = get_object_or_404(Event, pk=pk, is_deleted=False)
-        event_page = event.event_page
-        if not event_page:
-            return Response({"error": "Página de evento no encontrada."}, status=status.HTTP_404_NOT_FOUND)
-        serializer = EventPageSerializer(event_page)
-        return Response(serializer.data)
-
-
-    def put(self, request, pk):
-        event = get_object_or_404(Event, pk=pk, organizer=request.user, is_deleted=False)
-        event_page = event.event_page
-        if not event_page:
-            return Response({"error": "Página de evento no encontrada."}, status=status.HTTP_404_NOT_FOUND)
-        serializer = EventPageSerializer(event_page, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({"message": "Página de evento actualizada correctamente.", "event_page": serializer.data})
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, id):
-        permission_classes = [permissions.IsAuthenticated]
-        event_page = self.get_object(id)
-        if not event_page:
-            return Response({"error": "Página de evento no encontrada."}, status=status.HTTP_404_NOT_FOUND)
-        event_page.soft_delete()
-        return Response({"message": "Página de evento eliminada correctamente."}, status=status.HTTP_204_NO_CONTENT)
