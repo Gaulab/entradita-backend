@@ -468,6 +468,7 @@ class PublicTicketDetailView(APIView):
         response_data['event_image_address'] = ticket.event.image_address  # Include the event image address in the response
         response_data['event_place'] = ticket.event.place  # Include the event location in the response
         response_data['event_date'] = ticket.event.date  # Include the event date in the response
+        response_data['ticket_tag_info'] = TicketTagSerializer(ticket.ticket_tag).data  # Include the ticket tag in the response
         return Response(response_data, status=status.HTTP_200_OK)
 
 
