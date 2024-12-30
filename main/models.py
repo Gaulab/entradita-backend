@@ -1,7 +1,7 @@
 # entraditaBack/main/models.py
 from django.db.models.signals import post_save
 from django.db.models import JSONField
-from eventpage.models import EventPage
+from eventpage.models import EventPage, EventPageBlock, BlockType
 from django.dispatch import receiver
 from django.conf import settings
 from django.db import models
@@ -71,7 +71,7 @@ class TicketTag(models.Model):
 class Employee(models.Model):
     id = models.AutoField(primary_key=True)                                                                       # 01 - PK
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='employees')                          # 02 - FK
-    assigned_name = models.CharField(max_length=100)                                                              # 03
+    assigned_name = models.CharField(max_length=100)                                                              # 03 FIXME: cambiar lenght a 25
     is_seller = models.BooleanField()                                                                             # 04
     seller_capacity = models.IntegerField(null=True)                                                              # 05
     ticket_counter = models.IntegerField(default=0)                                                               # 06
@@ -131,4 +131,15 @@ class Ticket(models.Model):
 @receiver(post_save, sender=Event)
 def create_event_page(sender, instance, created, **kwargs):
     if created:
-        EventPage.objects.create(event=instance)
+        event_page = EventPage.objects.create(event=instance)
+        EventPageBlock.objects.create(
+            event_page=event_page,
+            type=BlockType.GENERAL,
+            order=1,
+            data={
+                "image_background": "",
+                "font": "Roboto, sans-serif",
+                "font_color": "#FFFFFF",
+                "card_color": "#000000"
+            }
+        )
