@@ -8,6 +8,7 @@ import dj_database_url
 from dotenv import load_dotenv
 
 AUTH_USER_MODEL = 'authapp.CustomUser'
+
 # Load environment variables
 load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
