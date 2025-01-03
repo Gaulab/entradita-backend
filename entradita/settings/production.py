@@ -22,18 +22,17 @@ DATABASES = {
 # Orígenes de CORS específicos para producción
 CORS_ALLOWED_ORIGINS = [
     'https://www.entradita.com',
-    'https://entradita.com',
-    'https://entradita.net',
-    'https://entradita.app',
+    'https://www.entradita.net',
+    'https://www.entradita.app',
     'https://entradita.com.ar',
 ]
 
 # CSRF Trusted Origins
 CSRF_TRUSTED_ORIGINS = [
     'https://www.entradita.com',
-    'https://entradita.net',
-    'https://entradita.app',
-    'https://entradita.com.ar',
+    'https://www.entradita.net',
+    'https://www.entradita.app',
+    'https://www.entradita.com.ar',
 ]
 
 CORS_ALLOW_CREDENTIALS = True
