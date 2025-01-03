@@ -395,7 +395,6 @@ class SellerInfoView(APIView):
 
         dni_required = empleado.event.dni_required
 
-
         tickets = Ticket.objects.filter(seller=empleado, is_deleted=False)  # Obtener los tickets del vendedor
         tickets_data = TicketSerializer(tickets, many=True).data  # Serializar los tickets
         
@@ -404,6 +403,7 @@ class SellerInfoView(APIView):
             ticket['ticket_tag'] = TicketTagSerializer(ticket_tag).data  # Reemplazar el ID del ticket_tag con el objeto serializado
         
         event = get_object_or_404(Event, id=empleado.event.id)  # Obtener el evento del vendedor
+        empleado_data['event_name'] = event.name  # Agregar el nombre del evento al vendedor
         
         return Response({
             'vendedor': empleado_data,
