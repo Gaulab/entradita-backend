@@ -7,7 +7,7 @@ import os
 
 load_dotenv()
 # Debug desactivado para producción
-DEBUG = False
+DEBUG = True
 
 # Hosts permitidos en producción
 ALLOWED_HOSTS = ['https://entraditaback-production.up.railway.app']
@@ -24,7 +24,7 @@ CORS_ALLOWED_ORIGINS = [
     'https://www.entradita.com',
     'https://www.entradita.net',
     'https://www.entradita.app',
-    'https://entradita.com.ar',
+    'https://www.entradita.com.ar',
 ]
 
 # CSRF Trusted Origins
