@@ -10,7 +10,7 @@ load_dotenv()
 DEBUG = False
 
 # Hosts permitidos en producción
-ALLOWED_HOSTS = ['entraditaback-production.up.railway.app']
+ALLOWED_HOSTS = ['https://entraditaback-production.up.railway.app']
 
 # Configuración de la base de datos SQLite para producción
 DATABASES = {
@@ -21,6 +21,7 @@ DATABASES = {
 
 # Orígenes de CORS específicos para producción
 CORS_ALLOWED_ORIGINS = [
+    'https://www.entradita.com',
     'https://entradita.com',
     'https://entradita.net',
     'https://entradita.app',
@@ -29,8 +30,10 @@ CORS_ALLOWED_ORIGINS = [
 
 # CSRF Trusted Origins
 CSRF_TRUSTED_ORIGINS = [
-    'https://entradita.com',
+    'https://www.entradita.com',
     'https://entradita.net',
     'https://entradita.app',
     'https://entradita.com.ar',
 ]
+
+CORS_ALLOW_CREDENTIALS = True
