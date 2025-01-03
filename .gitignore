@@ -2,7 +2,31 @@
 venv/
 env/
 .virtualenv/
+**/venv/*
+
+# Ignore Python cache files
+**/__pycache__/
+*.pyc
 __pycache__/
+*.py[cod]
+*$py.class
+
+# Ignore Django database
 db.sqlite3
+
+# Ignore static files
 staticfiles/
+
+# Ignore environment variables file
 .env
+
+# Ignore Django migrations
+**/migrations/*
+
+# Ignore media files
+media/
+
+# Ignore IDE specific files
+.idea/
+.vscode/
+*.iml
