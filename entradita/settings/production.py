@@ -10,7 +10,7 @@ load_dotenv()
 DEBUG = True
 
 # Hosts permitidos en producción
-ALLOWED_HOSTS = ['https://entraditaback-production.up.railway.app']
+ALLOWED_HOSTS = ['entraditaback-production.up.railway.app']
 
 # Configuración de la base de datos SQLite para producción
 DATABASES = {
