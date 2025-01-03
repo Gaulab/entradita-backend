@@ -20,12 +20,12 @@ urlpatterns = [
     path('event/<int:pk>/details/', views.EventDetailInfoView.as_view(), name='event-detail-info'),                                    # 07
     path('event/<int:pk>/economic-report/', views.EventEconomicReportView.as_view(), name='event-economic-report'),                   # 08
 
-    path('events/<int:pk>/employees/', views.EventEmployeesView.as_view(), name='event-employees'),                                     # GET: Get event employees >>>>> SE USA???
+    path('event/<int:pk>/employees/', views.EventEmployeesView.as_view(), name='event-employees'),                                     # GET: Get event employees >>>>> SE USA???
 
     # endpoints of employees
     path('employee/', views.EmployeeCreateView.as_view(), name='create-employee'),                                                     # 09
     path('employee/<int:pk>/status/', views.EmployeeStatusView.as_view(), name='employee-status'),                                     # 10
-    path('employee/<int:pk>/', views.EmpleadoDetailView.as_view(), name='empleado-detail'),                                            # PUT, DELETE: Manage a specific employee
+    path('employee/<int:pk>/', views.EmpleadoDetailView.as_view(), name='employee-detail'),                                            # PUT, DELETE: Manage a specific employee
     
     # endpoints of tickets
     path('tickets/', views.CreateTicketView.as_view(), name='create-ticket'),                          # POST: Create ticket

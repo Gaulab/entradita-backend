@@ -126,7 +126,10 @@ class EventListView(APIView):
             data = EventSerializer(event).data
             data.pop('ticket_tags', None)  # Remove the ticket_tags field
             event_data.append(data)
-        return Response(event_data, status=status.HTTP_200_OK)
+        return Response({
+            'events': event_data,
+            'ticket_limit': request.user.ticket_limit
+        }, status=status.HTTP_200_OK)
     
 class EventEconomicReportView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -224,7 +227,7 @@ class EventDetailInfoView(APIView):
         scanners = Employee.objects.filter(event=event, is_seller=False, is_deleted=False)
         scanners_data = EmployeeSerializer(scanners, many=True).data
                 
-        return Response({'event': event_data, 'tickets': tickets_data, 'vendedores': sellers_data, 'escaners': scanners_data}, status=status.HTTP_200_OK)
+        return Response({'event': event_data, 'tickets': tickets_data, 'sellers': sellers_data, 'scanners': scanners_data}, status=status.HTTP_200_OK)
 
 # GET: Get event employees -------------------------------------------------------->   
 class EventEmployeesView(APIView):
@@ -247,7 +250,7 @@ class EventEmployeesView(APIView):
         scanners = Employee.objects.filter(event=event, is_seller=False, is_deleted=False)
         scanners_data = EmployeeSerializer(scanners, many=True).data
                 
-        return Response({'event': event_data, 'vendedores': sellers_data, 'escaners': scanners_data}, status=status.HTTP_200_OK)
+        return Response({'event': event_data, 'sellers': sellers_data, 'scanners': scanners_data}, status=status.HTTP_200_OK)
 
 # <--- Ticket ------------------------------------------------------------------------------------------------------------->
 
