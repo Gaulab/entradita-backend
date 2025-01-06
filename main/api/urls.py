@@ -39,7 +39,7 @@ urlpatterns = [
       path('employee/', views.EmployeeCreateView.as_view(), name='create-employee'),
       
       # Manejar un empleado específico - Manage a specific employee (GET, PUT, DELETE)
-      path('employee/<int:pk>/', views.EmpleadoDetailView.as_view(), name='employee-detail'),
+      path('employee/<int:pk>/', views.EmployeeDetailView.as_view(), name='employee-detail'),
       
       # Habilitar o deshabilitar un empleado - Enable or disable an employee (PUT)
       path('employee/<int:pk>/status/', views.EmployeeStatusView.as_view(), name='employee-status'),
@@ -59,7 +59,7 @@ urlpatterns = [
       path('employees/seller/<str:uuid>/create-ticket/', views.SellerCreateTicketView.as_view(), name='vendedor-create-ticket'), # POST: Create ticket by vendedor
       
       # Eliminar un ticket por un vendedor - Delete a ticket by a seller (DELETE)
-      path('employees/seller/<str:uuid>/delete-ticket/<int:ticket_id>/', views.VendedorDeleteTicketView.as_view(), name='vendedor-delete-ticket'), # DELETE: Delete ticket by vendedor
+      path('employees/seller/<str:uuid>/delete-ticket/<int:ticket_id>/', views.SellerDeleteTicketView.as_view(), name='vendedor-delete-ticket'), # DELETE: Delete ticket by vendedor
       
       # Obtener la información para la pagina de un scanner - Get the information for the scanner's page (GET)
       path('employees/scanner/<str:uuid>/info/', views.ScannerInfoView.as_view(), name='scanner-info'),
@@ -73,10 +73,11 @@ urlpatterns = [
       # Obtener la información de un ticket a través de su uuid público - Get the information of a ticket through its public uuid (GET)
       path('ticket/<str:uuid>/', views.PublicTicketDetailView.as_view(), name='get-ticket'),
       
-      # Verificar la contraseña de un evento para un empleado - Check the password of an event for an employee (POST)
-      path('event/<str:pk>/check-password/', views.CheckEventPasswordView.as_view(), name='check_event_password'),
-      
       # Obtener la información de un evento para la web - Get the information of an event for the web (GET)
       path('event/<int:pk>/info-for-web/', views.InfoForWebView.as_view(), name='info-for-web'),
+
+      # Verificar la contraseña de un evento para un empleado - Check the password of an event for an employee (POST)
+      path('event/<str:uuid>/check-password/', views.CheckEventPasswordView.as_view(), name='check_event_password'),
+      
   ]
 
