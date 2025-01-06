@@ -12,7 +12,7 @@ class Event(models.Model):
     id = models.AutoField(primary_key=True)                                                                       # 01 - PK
     organizer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)                             # 02 - FK
     name = models.CharField(max_length=25)                                                                        # 03
-    password_employee = models.CharField(max_length=25)                                                           # 04
+    password_employee = models.CharField(max_length=128)                                                           # 04
     image_address = models.CharField(max_length=500, null=True, default='https://i.imgur.com/k4iUzTR.jpeg')                                                   # 05     
     place = models.CharField(max_length=25)                                                                       # 06
     date = models.DateField()                                                                                     # 07
