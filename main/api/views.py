@@ -362,7 +362,9 @@ class ScannerInfoView(APIView):
     permission_classes = [permissions.AllowAny]
     def get(self, request, uuid):
         scanner = get_object_or_404(Employee, uuid=uuid, is_seller=False, is_deleted=False)
-        return Response(EmployeeSerializer(scanner).data, status=status.HTTP_200_OK)
+        scanner_data = EmployeeSerializer(scanner).data
+        dni_required = scanner.event.dni_required
+        return Response({'scanner': scanner_data, 'dni_required': dni_required}, status=status.HTTP_200_OK)
 
 class ScanTicketView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -454,3 +456,14 @@ class CheckEventPasswordView(APIView):
             return Response({"message": "Password is correct."}, status=status.HTTP_200_OK)
         else:
             return Response({"error": "Password is incorrect."}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+
+class PurchaseInfoView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, pk):
+        event = get_object_or_404(Event, id=pk, is_deleted=False)
+        ticket_tags = TicketTag.objects.filter(event=event, is_deleted=False)
+        ticket_tags_data = TicketTagSerializer(ticket_tags, many=True).data
+        return Response({'ticket_tags': ticket_tags_data, 'dni_required': event.dni_required, 'event_name': event.name}, status=status.HTTP_200_OK)

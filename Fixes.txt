@@ -1,6 +1,0 @@
--1-
-Pasa que como el qr payload solo se basa en nombre apellido y dni, para distintos eventos se puede repetir el qr, al hacer una busqueda igualmente
-se controla que pertenezca al evento del que solicito la entrada, pero se podria mejorar el payload del qr para que sea unico por evento tambien.
--2-
-Al separar events-details en varias paginas tambien hay que separar la vista en backend en varias.
--3-

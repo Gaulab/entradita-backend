@@ -78,6 +78,8 @@ urlpatterns = [
 
       # Verificar la contraseña de un evento para un empleado - Check the password of an event for an employee (POST)
       path('event/<str:uuid>/check-password/', views.CheckEventPasswordView.as_view(), name='check_event_password'),
+
+      path('event/<int:pk>/purchase-info/', views.PurchaseInfoView.as_view(), name='purchase-info'),
       
   ]
 
