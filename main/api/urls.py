@@ -79,7 +79,11 @@ urlpatterns = [
       # Verificar la contraseña de un evento para un empleado - Check the password of an event for an employee (POST)
       path('event/<str:uuid>/check-password/', views.CheckEventPasswordView.as_view(), name='check_event_password'),
 
+      # Obtener o modificar la información de un evento para la compra de entradas - get or modify the information of an event for the purchase of tickets (GET, PUT)
       path('event/<int:pk>/purchase-info/', views.PurchaseInfoView.as_view(), name='purchase-info'),
+
+      # Obtener la informacion para la configuracion de la venta web de entradas - Get the information for the web ticket sale configuration (GET)
+      # path('event/<int:pk>/purchase-config/', views.WebSaleConfigView.as_view(), name='web-sale-config'),
       
   ]
 

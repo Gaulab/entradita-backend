@@ -59,6 +59,8 @@ class TicketTag(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='ticket_tags')                        # 02 - FK
     name = models.CharField(max_length = 25)                                                                      # 03
     max_tickets = models.IntegerField(null=True, blank=True)                                                      # 04
+    web_sale = models.BooleanField(default=False)                                                                  # 05
+    web_sale_quantity = models.IntegerField(null=True, blank=True)                                                 # 06
     price = models.FloatField(null=True, blank=True)                                                              # 05
     is_deleted = models.BooleanField(default=False)                                                               # 06
     def __str__(self):                                                                                            # 07
