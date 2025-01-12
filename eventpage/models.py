@@ -22,6 +22,8 @@ class BlockType(models.TextChoices):
     COUNTDOWN = 'COUNTDOWN', 'Countdown Block'
     BUTTON = 'BUTTON', 'Button Block'
     PAY = 'PAY', 'Pay Block'
+    MERCADOPAGO = 'MERCADOPAGO', 'MercadoPago Block'
+    SPOTIFY = 'SPOTIFY', 'Spotify Block'
 
 
 class EventPageBlock(models.Model):

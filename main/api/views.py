@@ -466,14 +466,21 @@ class PurchaseInfoView(APIView):
         event = get_object_or_404(Event, id=pk, is_deleted=False)
         ticket_tags = TicketTag.objects.filter(event=event, is_deleted=False)
         ticket_tags_data = TicketTagSerializer(ticket_tags, many=True).data
-        return Response({'ticket_tags': ticket_tags_data, 'dni_required': event.dni_required, 'event_name': event.name}, status=status.HTTP_200_OK)
+        return Response({
+            'ticket_tags': ticket_tags_data,
+            'dni_required': event.dni_required,
+            'event_name': event.name,
+            'web_sale': event.web_sale
+        }, status=status.HTTP_200_OK)
 
     def put(self, request, pk):
-        event = get_object_or_404(Event, id = pk, is_deleted = False)
+        event = get_object_or_404(Event, id=pk, is_deleted=False)
         ticket_tags_data = request.data.get('ticket_tags', [])
         for tag_data in ticket_tags_data:
             tag = get_object_or_404(TicketTag, id=tag_data['id'], event=event, is_deleted=False)
             tag.web_sale = tag_data.get('web_sale', tag.web_sale)
             tag.web_sale_quantity = tag_data.get('web_sale_quantity', tag.web_sale_quantity)
             tag.save()
-        return Response({"message": "Ticket tags updated successfully."}, status=status.HTTP_200_OK)
+        event.web_sale = request.data.get('web_sale', event.web_sale)
+        event.save()
+        return Response({"message": "Event and ticket tags updated successfully."}, status=status.HTTP_200_OK)

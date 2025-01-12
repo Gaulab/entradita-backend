@@ -21,6 +21,7 @@ class Event(models.Model):
     tickets_counter = models.IntegerField(default=0)                                                              # 10
     ticket_sales_enabled = models.BooleanField(default=True)                                                      # 11 - NEW
     contact = models.CharField(max_length=25, null = True)                                                          # 12
+    web_sale = models.BooleanField(default=False)                                                                  # 13
     is_deleted = models.BooleanField(default=False)                                                               # 12
     
     def increment_tickets_counter(self):                                                                          # 13    
@@ -37,14 +38,14 @@ class Event(models.Model):
         self.save()
     def has_capacity(self):                                                                                       # 17
         return self.capacity is None or self.tickets_counter < self.capacity
-    def get_empleados(self):                                                                                      # 18
-        return self.empleados.filter(is_deleted = False)
+    def get_employees(self):                                                                                      # 18
+        return self.employees.filter(is_deleted = False)
     def get_tickets_tags(self):                                                                                   # 20
         return self.ticket_tags.filter(is_deleted = False)
     def soft_delete(self):                                                                                        # 19
         self.is_deleted = True
         self.save()
-        for employee in self.empleados.all():
+        for employee in self.employees.all():
             employee.soft_delete()
         for ticket in self.tickets.all():
             ticket.soft_delete()
@@ -129,19 +130,98 @@ class Ticket(models.Model):
         return f"{self.owner_name} {self.owner_lastname} (Event: {self.event.name})"
 
 
-# Señal para crear la página del evento automáticamente
+# Señal para crear la página del evento automáticamente con bloques predefinidos
 @receiver(post_save, sender=Event)
-def create_event_page(sender, instance, created, **kwargs):
+def create_event_page_with_blocks(sender, instance, created, **kwargs):
     if created:
+        # Crear la página del evento
         event_page = EventPage.objects.create(event=instance)
-        EventPageBlock.objects.create(
-            event_page=event_page,
-            type=BlockType.GENERAL,
-            order=1,
-            data={
-                "image_background": "",
-                "font": "Roboto, sans-serif",
-                "font_color": "#FFFFFF",
-                "card_color": "#000000"
-            }
-        )
+
+        # Bloques predefinidos
+        blocks = [
+            {
+                "type": BlockType.GENERAL,
+                "order": 1,
+                "data": {
+                    "image_background": "https://i.pinimg.com/736x/96/07/70/9607702a5f65081f0b12a0d4bfcab1e3.jpg",
+                    "font": "Roboto, sans-serif",
+                    "font_color": "#c7daff",
+                    "card_color": "#000d63",
+                },
+            },
+            {
+                "type": BlockType.TITLE,
+                "order": 2,
+                "data": {
+                    "title": "Evento x",
+                    "subtitle": "",
+                },
+            },
+            {
+                "type": BlockType.IMAGE,
+                "order": 3,
+                "data": {
+                    "image_address": "https://i.imgur.com/AeQYvyy.jpeg",
+                },
+            },
+            {
+                "type": BlockType.COUNTDOWN,
+                "order": 4,
+                "data": {
+                    "contdown_date": "2025-02-06T02:26",
+                },
+            },
+            {
+                "type": BlockType.MERCADOPAGO,
+                "order": 5,
+                "data": {
+                    "button_text": "Comprar ticket",
+                    "button_bgcolor": "#62a0ea",
+                    "button_color": "#000000",
+                },
+            },
+            {
+                "type": BlockType.TEXT,
+                "order": 6,
+                "data": {
+                    "text": "Únete a nosotros en este evento único, en X de la ciudad Y para un evento inolvidable lleno de momentos únicos. ¡Compra tu ticket ahora y no te pierdas esta experiencia única!",
+                },
+            },
+            {
+                "type": BlockType.BUTTON,
+                "order": 7,
+                "data": {
+                    "button_text": "Whatsapp",
+                    "button_bgcolor": "#000000",
+                    "button_color": "#5ffc7b",
+                    "button_link": "https://whatsapp.com/",
+                },
+            },
+            {
+                "type": BlockType.BUTTON,
+                "order": 8,
+                "data": {
+                    "button_text": "Instagram",
+                    "button_link": "https://instagram.com/",
+                    "button_bgcolor": "#000000",
+                    "button_color": "#ff00ba",
+                },
+            },
+            {
+                "type": BlockType.SPOTIFY,
+                "order": 9,
+                "data": {
+                    "spotify_link": "https://open.spotify.com/playlist/37i9dQZEVXbMMy2roB9myp?si=9886d0899da44d7e",
+                    "text": "¿Hacemos previa juntos?",
+                },
+            },
+        ]
+
+        # Crear bloques asociados a la página
+        for block in blocks:
+            EventPageBlock.objects.create(
+                event_page=event_page,
+                type=block["type"],
+                order=block["order"],
+                data=block["data"],
+            )
