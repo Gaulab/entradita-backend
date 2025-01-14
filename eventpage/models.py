@@ -24,6 +24,7 @@ class BlockType(models.TextChoices):
     PAY = 'PAY', 'Pay Block'
     MERCADOPAGO = 'MERCADOPAGO', 'MercadoPago Block'
     SPOTIFY = 'SPOTIFY', 'Spotify Block'
+    TARJETEROS = 'TARJETEROS', 'Tarjeteros Block'
 
 
 class EventPageBlock(models.Model):

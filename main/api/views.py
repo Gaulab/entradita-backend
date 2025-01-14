@@ -176,7 +176,7 @@ class EventEconomicReportView(APIView):
             sellers_data.append(seller_data)
         # Include organizer as a seller
         organizer_data = {
-            'id': event.organizer.id,
+            'id': 0,
             'assigned_name': event.organizer.username,
             'ticket_tag_sales': {}
         }
@@ -295,6 +295,8 @@ class TicketDetailView(APIView):
     def delete(self, request, pk):
         ticket = get_object_or_404(Ticket, id=pk, event__organizer=request.user, is_deleted=False)
         ticket.event.decrement_tickets_counter()
+        if ticket.seller:
+            ticket.seller.decrement_ticket_counter()
         ticket.soft_delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -374,25 +376,9 @@ class ScanTicketView(APIView):
         serializer = TicketSerializer(ticket)
 
         if ticket.scanned:  # Verify that the ticket has not been scanned
-            return Response({"old_scanned":True, "ticket": serializer.data}, status=status.HTTP_200_OK)
-        
-        scanner = get_object_or_404(Employee, uuid = request.data.get('scanner_id'), is_seller = False, is_deleted=False)
-        if not scanner:
-            return Response({"message": "Scanner invalido"}, status=status.HTTP_400_BAD_REQUEST)
-        scanner.increment_ticket_counter()
-        
-        ticket.scan()  # Scan the ticket
-        return Response({"old_scanned":False, "ticket": serializer.data}, status=status.HTTP_200_OK)
-
-class ScanTicketDniView(APIView):
-    permission_classes = [permissions.AllowAny]
-
-    def put(self, request, dni):
-        ticket = get_object_or_404(Ticket, owner_dni = dni, event=request.data.get('event_id'), is_deleted=False)  # Get the scanner by UUID and verify they are active
-        serializer = TicketDniSerializer(ticket)
-
-        if ticket.scanned:  # Verify that the ticket has not been scanned
-            return Response({"old_scanned":True, "ticket": serializer.data}, status=status.HTTP_200_OK) 
+            ticket_data = serializer.data
+            ticket_data['ticket_tag_name'] = ticket.ticket_tag.name
+            return Response({"old_scanned": True, "ticket": ticket_data}, status=status.HTTP_200_OK)
         
         scanner = get_object_or_404(Employee, uuid=request.data.get('scanner_id'), is_seller=False, is_deleted=False)
         if not scanner:
@@ -400,7 +386,31 @@ class ScanTicketDniView(APIView):
         scanner.increment_ticket_counter()
         
         ticket.scan()  # Scan the ticket
-        return Response({"old_scanned":False, "ticket": serializer.data}, status=status.HTTP_200_OK)
+        ticket_data = serializer.data
+        ticket_data['ticket_tag_name'] = ticket.ticket_tag.name
+        return Response({"old_scanned": False, "ticket": ticket_data}, status=status.HTTP_200_OK)
+
+class ScanTicketDniView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def put(self, request, dni):
+        ticket = get_object_or_404(Ticket, owner_dni=dni, event=request.data.get('event_id'), is_deleted=False)  # Get the scanner by UUID and verify they are active
+        serializer = TicketDniSerializer(ticket)
+
+        if ticket.scanned:  # Verify that the ticket has not been scanned
+            ticket_data = serializer.data
+            ticket_data['ticket_tag_name'] = ticket.ticket_tag.name
+            return Response({"old_scanned": True, "ticket": ticket_data}, status=status.HTTP_200_OK)
+        
+        scanner = get_object_or_404(Employee, uuid=request.data.get('scanner_id'), is_seller=False, is_deleted=False)
+        if not scanner:
+            return Response({"message": "Scanner invalido"}, status=status.HTTP_400_BAD_REQUEST)
+        scanner.increment_ticket_counter()
+        
+        ticket.scan()  # Scan the ticket
+        ticket_data = serializer.data
+        ticket_data['ticket_tag_name'] = ticket.ticket_tag.name
+        return Response({"old_scanned": False, "ticket": ticket_data}, status=status.HTTP_200_OK)
 
 class PublicTicketDetailView(APIView):
     permission_classes = [permissions.AllowAny]

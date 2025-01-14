@@ -16,7 +16,7 @@ ALLOWED_HOSTS = ['*']
 #         default=os.getenv('DATABASE_URL')
 #     )
 # }  
-   
+
 
 DATABASES = {
     'default': {

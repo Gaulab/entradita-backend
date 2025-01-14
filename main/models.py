@@ -172,47 +172,42 @@ def create_event_page_with_blocks(sender, instance, created, **kwargs):
                 },
             },
             {
-                "type": BlockType.MERCADOPAGO,
+                "type": BlockType.TEXT,
                 "order": 5,
                 "data": {
-                    "button_text": "Comprar ticket",
-                    "button_bgcolor": "#62a0ea",
-                    "button_color": "#000000",
+                    "text": "📍Ezeiza, Provincia de Buenos Aires",
                 },
             },
             {
-                "type": BlockType.TEXT,
+                "type": BlockType.TARJETEROS,
                 "order": 6,
                 "data": {
-                    "text": "Únete a nosotros en este evento único, en X de la ciudad Y para un evento inolvidable lleno de momentos únicos. ¡Compra tu ticket ahora y no te pierdas esta experiencia única!",
+                    "text": "Conseguí tus entradas con alguno de nuestros tarjeteros",
+                    "sellers": [
+                        {"name": "Enzo Fernández", "phone": "3482123123"},
+                        {"name": "Julián Álvarez", "phone": "3482123123"},
+                        {"name": "Lionel Messi (pulga)", "phone": "3482123123"},
+                        {"name": "Emiliano Martinez (dibu)", "phone": "3482123123"},
+                        {"name": "Ángel Di María", "phone": "3482123123"},
+                    ],
                 },
             },
             {
-                "type": BlockType.BUTTON,
+                "type": BlockType.SPOTIFY,
                 "order": 7,
                 "data": {
-                    "button_text": "Whatsapp",
-                    "button_bgcolor": "#000000",
-                    "button_color": "#5ffc7b",
-                    "button_link": "https://whatsapp.com/",
+                    "spotify_link": "https://open.spotify.com/playlist/37i9dQZEVXbMMy2roB9myp?si=9886d0899da44d7e",
+                    "text": "¿Hacemos previa juntos?",
                 },
             },
             {
                 "type": BlockType.BUTTON,
                 "order": 8,
                 "data": {
-                    "button_text": "Instagram",
+                    "button_text": "Seguinos en instagram",
                     "button_link": "https://instagram.com/",
-                    "button_bgcolor": "#000000",
+                    "button_bgcolor": "#01001f",
                     "button_color": "#ff00ba",
-                },
-            },
-            {
-                "type": BlockType.SPOTIFY,
-                "order": 9,
-                "data": {
-                    "spotify_link": "https://open.spotify.com/playlist/37i9dQZEVXbMMy2roB9myp?si=9886d0899da44d7e",
-                    "text": "¿Hacemos previa juntos?",
                 },
             },
         ]
