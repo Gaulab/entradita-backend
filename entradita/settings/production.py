@@ -7,7 +7,7 @@ import os
 
 load_dotenv()
 # Debug desactivado para producción
-DEBUG = True
+DEBUG = False
 
 # Hosts permitidos en producción
 #ALLOWED_HOSTS = ['entraditaback-production.up.railway.app']
