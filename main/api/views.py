@@ -10,6 +10,7 @@ from django.contrib.auth.hashers import make_password, check_password
 from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
 from django.shortcuts import get_object_or_404
+from django.http import HttpResponseRedirect
 from rest_framework.exceptions import APIException
 # local imports
 from .serializers import EventSerializer, TicketSerializer, EmployeeSerializer, TicketDniSerializer, TicketTagSerializer
@@ -47,6 +48,41 @@ class EventListView(APIView):
             data.pop('ticket_tags', None)
             event_data.append(data)
         return Response({'events': event_data, 'ticket_limit': request.user.ticket_limit}, status=status.HTTP_200_OK)
+
+class Organizer(APIView):
+    # permission_classes = [permissions.IsAuthenticated]
+    def get(self, request):
+        # https://auth.mercadopago.com/authorization?response_type=code&client_id=$APP_ID`redirect_uri=$YOUR_URL&code_challenge=$CODE_CHALLENGE&code_challenge_method=$CODE_METHOD
+        code = request.query_params.get('code')
+        state = request.query_params.get('state')
+        redirect_uri = "https://52.90.21.234:8000/docs/api/v1/main/organizer/get-access-token"
+        # POST: https://api.mercadopago.com/oauth/token
+        # "client_secret": "client_secret",
+        # "code": "TG-XXXXXXXX-241983636",
+        # "grant_type": "authorization_code",
+        # "redirect_uri": "https://www.redirect-url.com",
+        # "refresh_token": "TG-XXXXXXXX-241983636",
+        # "test_token": "false"
+
+        import requests
+
+        url = "https://api.mercadopago.com/oauth/token"
+        payload = {
+            "client_secret": "client_secret",
+            "code": code,
+            "grant_type": "authorization_code",
+            "redirect_uri": redirect_uri,
+            # grant_type: "refresh_token".
+            # "refresh_token": "TG-XXXXXXXX-241983636",
+            "test_token": "true"
+        }
+        access_response = requests.post(url, data=payload).json()
+
+        # curl command to query this endpoint:
+        # curl "http://localhost:8000/api/organizer/?code=123&state=wow"
+        # curl -H "Authorization: Token <your_token>" "http://localhost:8000/api/organizer/?code=123&state=wow"
+        print({"code": code, "state": state, "access_response": access_response})
+        return HttpResponseRedirect("http://localhost:5173/dashboard")
 
 class EventDetailView(APIView):
     permission_classes = [permissions.IsAuthenticated]

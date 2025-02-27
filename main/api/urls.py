@@ -19,7 +19,10 @@ urlpatterns = [
       
       # Obtener eventos de un organizador y el ticket limit - Get events of an organizer and the ticket limit (GET)
       path('events/', views.EventListView.as_view(), name='event-list'),
-      
+
+      # Guardar Organizer access token
+      path('organizer/get-access-token', views.Organizer.as_view(), name='organizer-get-access-token'),
+
       # Manejar un evento específico - Manage a specific event (GET, PUT, DELETE)
       path('event/<int:pk>/', views.EventDetailView.as_view(), name='event-detail'),
       
