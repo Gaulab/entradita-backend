@@ -192,8 +192,18 @@ class EventEconomicReportView(APIView):
             'total_tickets': total_tickets,
             'total_sales': total_sales,
             'ticket_tags': ticket_tags_data,
-            'sellers': sellers_data
+            'sellers': sellers_data,
+            'commission_per_ticket': event.commission_per_ticket,
         }, status=status.HTTP_200_OK)
+    
+    def patch(self, request, pk):
+        event = get_object_or_404(Event, id=pk, organizer=request.user, is_deleted=False)
+        data = request.data
+        if 'commission_per_ticket' in data:
+            event.commission_per_ticket = data['commission_per_ticket']
+            event.save()
+            return Response({'commission_per_ticket': event.commission_per_ticket}, status=status.HTTP_200_OK)
+        return Response({"error": "Invalid field."}, status=status.HTTP_400_BAD_REQUEST)
 
 class EventEmployeesView(APIView):
     permission_classes = [permissions.IsAuthenticated]

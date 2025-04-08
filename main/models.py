@@ -19,6 +19,7 @@ class Event(models.Model):
     capacity = models.PositiveIntegerField(null=True)                                                             # 09
     tickets_counter = models.IntegerField(default=0)                                                              # 10
     ticket_sales_enabled = models.BooleanField(default=True)                                                      # 11 - NEW
+    commission_per_ticket = models.PositiveBigIntegerField(default=500, null=True)                                                # 12
     contact = models.CharField(max_length=25, null = True)                                                          # 12
     web_sale = models.BooleanField(default=False)                                                                  # 13
     is_deleted = models.BooleanField(default=False)                                                               # 12
