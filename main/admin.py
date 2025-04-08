@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Event, Ticket, Employee, TicketTag, EventPage
+from .models import Event, Ticket, Employee, TicketTag
 
 # Register your models here.
 admin.site.register(Event)

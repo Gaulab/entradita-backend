@@ -1,14 +1,9 @@
 # entraditaBack/main/api/serializers.py
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from ..models import Event, Ticket, Employee, TicketTag, EventPage
+from ..models import Event, Ticket, Employee, TicketTag
 from ..utils import generate_qr_payload 
 from datetime import datetime
-
-class EventPageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EventPage
-        fields = '__all__'
 
 class TicketSerializer(serializers.ModelSerializer):
     class Meta:

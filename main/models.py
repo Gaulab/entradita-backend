@@ -1,7 +1,6 @@
 # entraditaBack/main/models.py
 from django.db.models.signals import post_save
 from django.db.models import JSONField
-from eventpage.models import EventPage, EventPageBlock, BlockType
 from django.dispatch import receiver
 from django.conf import settings
 from django.db import models
@@ -130,93 +129,3 @@ class Ticket(models.Model):
         return f"{self.owner_name} {self.owner_lastname} (Event: {self.event.name})"
 
 
-# Señal para crear la página del evento automáticamente con bloques predefinidos
-@receiver(post_save, sender=Event)
-def create_event_page_with_blocks(sender, instance, created, **kwargs):
-    if created:
-        # Crear la página del evento
-        event_page = EventPage.objects.create(event=instance)
-
-        # Bloques predefinidos
-        blocks = [
-            {
-                "type": BlockType.GENERAL,
-                "order": 1,
-                "data": {
-                    "image_background": "https://i.pinimg.com/736x/96/07/70/9607702a5f65081f0b12a0d4bfcab1e3.jpg",
-                    "font": "Roboto, sans-serif",
-                    "font_color": "#c7daff",
-                    "card_color": "#000d63",
-                },
-            },
-            {
-                "type": BlockType.TITLE,
-                "order": 2,
-                "data": {
-                    "title": "Evento x",
-                    "subtitle": "",
-                },
-            },
-            {
-                "type": BlockType.IMAGE,
-                "order": 3,
-                "data": {
-                    "image_address": "https://i.imgur.com/AeQYvyy.jpeg",
-                },
-            },
-            {
-                "type": BlockType.COUNTDOWN,
-                "order": 4,
-                "data": {
-                    "contdown_date": "2025-02-06T02:26",
-                },
-            },
-            {
-                "type": BlockType.TEXT,
-                "order": 5,
-                "data": {
-                    "text": "📍Ezeiza, Provincia de Buenos Aires",
-                },
-            },
-            {
-                "type": BlockType.TARJETEROS,
-                "order": 6,
-                "data": {
-                    "text": "Conseguí tus entradas con alguno de nuestros tarjeteros",
-                    "sellers": [
-                        {"name": "Enzo Fernández", "phone": "3482123123"},
-                        {"name": "Julián Álvarez", "phone": "3482123123"},
-                        {"name": "Lionel Messi (pulga)", "phone": "3482123123"},
-                        {"name": "Emiliano Martinez (dibu)", "phone": "3482123123"},
-                        {"name": "Ángel Di María", "phone": "3482123123"},
-                    ],
-                },
-            },
-            {
-                "type": BlockType.SPOTIFY,
-                "order": 7,
-                "data": {
-                    "spotify_link": "https://open.spotify.com/playlist/37i9dQZEVXbMMy2roB9myp?si=9886d0899da44d7e",
-                    "text": "¿Hacemos previa juntos?",
-                },
-            },
-            {
-                "type": BlockType.BUTTON,
-                "order": 8,
-                "data": {
-                    "button_text": "Seguinos en instagram",
-                    "button_link": "https://instagram.com/",
-                    "button_bgcolor": "#01001f",
-                    "button_color": "#ff00ba",
-                },
-            },
-        ]
-
-        # Crear bloques asociados a la página
-        for block in blocks:
-            EventPageBlock.objects.create(
-                event_page=event_page,
-                type=block["type"],
-                order=block["order"],
-                data=block["data"],
-            )
