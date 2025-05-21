@@ -11,7 +11,7 @@ DEBUG = False
 
 # Hosts permitidos en producción
 #ALLOWED_HOSTS = ['entraditaback-production.up.railway.app']
-ALLOWED_HOSTS = ['entraditabackend.up.railway.app']
+ALLOWED_HOSTS = ['entradita-backend.up.railway.app ','api.entradita.com']
 
 # Configuración de la base de datos SQLite para producción
 DATABASES = {
